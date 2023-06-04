@@ -11,6 +11,49 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     movemenet_delay = 200;
+    QPixmap pix("/home/dogukan/Desktop/robot/Ressources/startcamera.png");
+    QIcon icon(pix);
+    ui->pushButton->setIcon(icon);
+    ui->pushButton->setIconSize(ui->pushButton->size());
+
+    QPixmap pix2("/home/dogukan/Desktop/robot/Ressources/forward.png");
+    QIcon icon2(pix2);
+    ui->pushButton_2->setIcon(icon2);
+    ui->pushButton_2->setIconSize(ui->pushButton->size());
+
+    QPixmap pix4("/home/dogukan/Desktop/robot/Ressources/back.png");
+    QIcon icon4(pix4);
+    ui->pushButton_4->setIcon(icon4);
+    ui->pushButton_4->setIconSize(ui->pushButton->size());
+
+
+    QPixmap pix7("/home/dogukan/Desktop/robot/Ressources/right.png");
+    QIcon icon7(pix7);
+    ui->pushButton_7->setIcon(icon7);
+    ui->pushButton_7->setIconSize(ui->pushButton->size());
+
+    QPixmap pix8("/home/dogukan/Desktop/robot/Ressources/right.png");
+    QIcon icon8(pix8);
+    ui->pushButton_8->setIcon(icon8);
+    ui->pushButton_8->setIconSize(ui->pushButton->size());
+
+    QPixmap pix9("/home/dogukan/Desktop/robot/Ressources/left.png");
+    QIcon icon9(pix9);
+    ui->pushButton_9->setIcon(icon9);
+    ui->pushButton_9->setIconSize(ui->pushButton->size());
+
+    QPixmap pix10("/home/dogukan/Desktop/robot/Ressources/left.png");
+    QIcon icon10(pix10);
+    ui->pushButton_10->setIcon(icon10);
+    ui->pushButton_10->setIconSize(ui->pushButton->size());
+
+
+    /*QPixmap pix11("/home/dogukan/Desktop/robot/Ressources/joker.png");
+    ui->label_3->setPixmap(pix11);
+    ui->label_3->setMask(pix11.mask());
+    ui->label_3->show();*/
+
+
 }
 
 MainWindow::~MainWindow()
