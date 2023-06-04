@@ -11,49 +11,66 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     movemenet_delay = 200;
-    QPixmap pix("/home/dogukan/Desktop/robot/Ressources/startcamera.png");
-    QIcon icon(pix);
-    ui->pushButton->setIcon(icon);
-    ui->pushButton->setIconSize(ui->pushButton->size());
 
-    QPixmap pix2("/home/dogukan/Desktop/robot/Ressources/forward.png");
-    QIcon icon2(pix2);
-    ui->pushButton_2->setIcon(icon2);
-    ui->pushButton_2->setIconSize(ui->pushButton->size());
+    char buffer[PATH_MAX];
+    if (getcwd(buffer, sizeof(buffer)) != nullptr) {
+        std::string path(buffer);
 
-    QPixmap pix4("/home/dogukan/Desktop/robot/Ressources/back.png");
-    QIcon icon4(pix4);
-    ui->pushButton_4->setIcon(icon4);
-    ui->pushButton_4->setIconSize(ui->pushButton->size());
+        // Find the last occurrence of the directory separator
+        size_t lastSeparator = path.find_last_of("/\\");
 
+        // Remove the last file
+        path = path.substr(0, lastSeparator);
 
-    QPixmap pix7("/home/dogukan/Desktop/robot/Ressources/right.png");
-    QIcon icon7(pix7);
-    ui->pushButton_7->setIcon(icon7);
-    ui->pushButton_7->setIconSize(ui->pushButton->size());
+        // Find the second last occurrence of the directory separator
+        size_t secondLastSeparator = path.find_last_of("/\\");
 
-    QPixmap pix8("/home/dogukan/Desktop/robot/Ressources/right.png");
-    QIcon icon8(pix8);
-    ui->pushButton_8->setIcon(icon8);
-    ui->pushButton_8->setIconSize(ui->pushButton->size());
+        // Remove the second last file
+        path = path.substr(0, secondLastSeparator);
 
-    QPixmap pix9("/home/dogukan/Desktop/robot/Ressources/left.png");
-    QIcon icon9(pix9);
-    ui->pushButton_9->setIcon(icon9);
-    ui->pushButton_9->setIconSize(ui->pushButton->size());
+        path += "/robot/Resources/";
 
-    QPixmap pix10("/home/dogukan/Desktop/robot/Ressources/left.png");
-    QIcon icon10(pix10);
-    ui->pushButton_10->setIcon(icon10);
-    ui->pushButton_10->setIconSize(ui->pushButton->size());
+        QPixmap pix(QString::fromStdString(path + "startcamera.png"));
+        QIcon icon(pix);
+        ui->pushButton->setIcon(icon);
+        ui->pushButton->setIconSize(ui->pushButton->size());
+
+        QPixmap pix2(QString::fromStdString(path + "forward.png"));
+        QIcon icon2(pix2);
+        ui->pushButton_2->setIcon(icon2);
+        ui->pushButton_2->setIconSize(ui->pushButton->size());
+
+        QPixmap pix4(QString::fromStdString(path + "back.png"));
+        QIcon icon4(pix4);
+        ui->pushButton_4->setIcon(icon4);
+        ui->pushButton_4->setIconSize(ui->pushButton->size());
 
 
-    /*QPixmap pix11("/home/dogukan/Desktop/robot/Ressources/joker.png");
-    ui->label_3->setPixmap(pix11);
-    ui->label_3->setMask(pix11.mask());
-    ui->label_3->show();*/
+        QPixmap pix7(QString::fromStdString(path + "right.png"));
+        QIcon icon7(pix7);
+        ui->pushButton_7->setIcon(icon7);
+        ui->pushButton_7->setIconSize(ui->pushButton->size());
 
+        QPixmap pix8(QString::fromStdString(path + "right.png"));
+        QIcon icon8(pix8);
+        ui->pushButton_8->setIcon(icon8);
+        ui->pushButton_8->setIconSize(ui->pushButton->size());
 
+        QPixmap pix9(QString::fromStdString(path + "left.png"));
+        QIcon icon9(pix9);
+        ui->pushButton_9->setIcon(icon9);
+        ui->pushButton_9->setIconSize(ui->pushButton->size());
+
+        QPixmap pix10(QString::fromStdString(path + "left.png"));
+        QIcon icon10(pix10);
+        ui->pushButton_10->setIcon(icon10);
+        ui->pushButton_10->setIconSize(ui->pushButton->size());
+
+        /*QPixmap pix11("joker.png");
+        ui->label_3->setPixmap(pix11);
+        ui->label_3->setMask(pix11.mask());
+        ui->label_3->show();*/
+    }
 }
 
 MainWindow::~MainWindow()
@@ -312,13 +329,12 @@ void MainWindow::on_pushButton_10_released()
 }
 
 
-
 //****************************************************
 
-void MainWindow::on_horizontalSlider_sliderMoved(int position)
+void MainWindow::on_horizontalSlider_valueChanged(int value)
 {
-     qInfo() <<ui->horizontalSlider->value();
-     ui->label->setText( QString::number( ui->horizontalSlider->value() ) );
+    qInfo() << value;
+    ui->label->setText(QString::number(value));
 }
 
 //*******************************************************
