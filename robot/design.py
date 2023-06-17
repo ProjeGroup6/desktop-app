@@ -4,6 +4,8 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import QTimer
 import socket
 
+globalVar = 55
+
 # For camera
 class RunThread(QtCore.QThread):
     changePixmap = QtCore.pyqtSignal(QImage)
@@ -49,12 +51,14 @@ class Ui_MainWindow(object):
         MainWindow.setStyleSheet("background: #1E2128;")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+        
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
         self.progressBar.setGeometry(QtCore.QRect(20, 70, 241, 31))
         self.progressBar.setStyleSheet("color:white;")
         self.progressBar.setProperty("value", 24)
         self.progressBar.setTextDirection(QtWidgets.QProgressBar.BottomToTop)
         self.progressBar.setObjectName("progressBar")
+        
         self.connectAddresInput = QtWidgets.QTextEdit(self.centralwidget)
         self.connectAddresInput.setGeometry(QtCore.QRect(280, 70, 191, 31))
         self.connectAddresInput.setStyleSheet("background: white;")
@@ -225,6 +229,12 @@ class Ui_MainWindow(object):
         self.turnrightButton.released.connect(self.turnrightButton_released)
         self.relaxButton.released.connect(self.relaxButton_released)
         self.balanceButton.released.connect(self.balanceButton_released)   
+       
+
+    def update_progress(self):
+        global globalVar
+        self.progressBar.setValue(globalVar)
+
         
     def forwardButton_pressed(self):
         self.is_forwardButton_pressed = True
@@ -330,6 +340,10 @@ class Ui_MainWindow(object):
         
     def __init__(self):
         self.sock = None
+       
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update_progress)
+        self.timer.start(1000)  # update every second
 
         # Create a timer for each button
         self.forwardButtonTimer = QTimer()
