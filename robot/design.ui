@@ -344,7 +344,7 @@ border: none;</string>
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="stopBUtton">
+   <widget class="QPushButton" name="stopButton">
     <property name="geometry">
      <rect>
       <x>360</x>
