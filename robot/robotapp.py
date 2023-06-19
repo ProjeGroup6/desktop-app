@@ -3,6 +3,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import QTimer
 import socket
+import time
 
 globalVar = 55
 
@@ -42,6 +43,22 @@ class RunThread(QtCore.QThread):
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image = QImage(frame.data, width, height, QImage.Format_RGB888)
             self.changePixmap.emit(image)
+            
+            
+class ServerThread(QtCore.QThread):
+    messageReceived = QtCore.pyqtSignal(str)
+
+    def __init__(self, sock, parent=None):
+        super(ServerThread, self).__init__(parent)
+        self.sock = sock
+
+    def run(self):
+        while True:
+            data = self.sock.recv(1024)
+            if not data:
+                break
+            self.messageReceived.emit(data.decode())
+
 
 
 class Ui_MainWindow(object):
@@ -206,29 +223,25 @@ class Ui_MainWindow(object):
         self.balanceButton.clicked.connect(lambda: self.send_message_to_server("9"))
         self.startButton.clicked.connect(lambda: self.send_message_to_server("10"))
         self.stopButton.clicked.connect(lambda: self.send_message_to_server("11"))
+        self.openCameraButton.clicked.connect(lambda: self.send_message_to_server("12"))
         
         # When the button is pressed, start the timer and set the flag
         self.forwardButton.pressed.connect(self.forwardButton_pressed)
-        self.buzzerButton.pressed.connect(self.buzzerButton_pressed)
         self.backwardButton.pressed.connect(self.backwardButton_pressed)
         self.stepleftButton.pressed.connect(self.stepleftButton_pressed)
         self.turnleftButton.pressed.connect(self.turnleftButton_pressed)
         self.steprightButton.pressed.connect(self.steprightButton_pressed)
         self.turnrightButton.pressed.connect(self.turnrightButton_pressed)
-        self.relaxButton.pressed.connect(self.relaxButton_pressed)
-        self.balanceButton.pressed.connect(self.balanceButton_pressed)
 
 
         # When the button is released, stop the timer and unset the flag
         self.forwardButton.released.connect(self.forwardButton_released)
-        self.buzzerButton.released.connect(self.buzzerButton_released)
         self.backwardButton.released.connect(self.backwardButton_released)
         self.stepleftButton.released.connect(self.stepleftButton_released)
         self.turnleftButton.released.connect(self.turnleftButton_released)
         self.steprightButton.released.connect(self.steprightButton_released)
         self.turnrightButton.released.connect(self.turnrightButton_released)
-        self.relaxButton.released.connect(self.relaxButton_released)
-        self.balanceButton.released.connect(self.balanceButton_released)   
+       
        
 
     def update_progress(self):
@@ -244,16 +257,6 @@ class Ui_MainWindow(object):
         self.is_forwardButton_pressed = False
         self.forwardButtonTimer.stop()
         
-   
-    def buzzerButton_pressed(self):
-        self.is_buzzerButton_pressed = True
-        self.buzzerButtonTimer.start()
-
-    def buzzerButton_released(self):
-        self.is_buzzerButton_pressed = False
-        self.buzzerButtonTimer.stop()
-
-
     def backwardButton_pressed(self):
         self.is_backwardButton_pressed = True
         self.backwardButtonTimer.start()
@@ -298,23 +301,6 @@ class Ui_MainWindow(object):
         self.is_turnrightButton_pressed = False
         self.turnrightButtonTimer.stop()
         
-        
-    def relaxButton_pressed(self):
-        self.is_relaxButton_pressed = True
-        self.relaxButtonTimer.start()
-
-    def relaxButton_released(self):
-        self.is_relaxButton_pressed = False
-        self.relaxButtonTimer.stop()
-        
-    
-    def balanceButton_pressed(self):
-        self.is_balanceButton_pressed = True
-        self.balanceButtonTimer.start()
-
-    def balanceButton_released(self):
-        self.is_balanceButton_pressed = False
-        self.balanceButtonTimer.stop()
           
           
      # Slot for handling the valueChanged signal
@@ -337,9 +323,17 @@ class Ui_MainWindow(object):
     def set_camera_image(self, image):
         pixmap = QPixmap.fromImage(image)
         self.image_label.setPixmap(pixmap)
+      
         
     def __init__(self):
         self.sock = None
+        self.server_thread = None
+        self.isConnected = False
+        
+        # Create a thread that will listen for incoming messages
+        self.listen_thread = QThread()
+        self.listen_thread.run = self.listen_to_server  # The run method is the entry point into the thread
+        self.listen_thread.start()
        
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update_progress)
@@ -347,48 +341,65 @@ class Ui_MainWindow(object):
 
         # Create a timer for each button
         self.forwardButtonTimer = QTimer()
-        self.buzzerButtonTimer = QTimer()
         self.backwardButtonTimer = QTimer()
         self.stepleftButtonTimer = QTimer()
         self.turnleftButtonTimer = QTimer()
         self.steprightButtonTimer = QTimer()
         self.turnrightButtonTimer = QTimer()
-        self.relaxButtonTimer = QTimer()
-        self.balanceButtonTimer = QTimer()
-
 
         # Add a flag for each action
         self.is_forwardButton_pressed = False
-        self.is_buzzerButton_pressed = False
         self.is_backwardButton_pressed = False
         self.is_stepleftButton_pressed = False
         self.is_turnleftButton_pressed = False
         self.is_steprightButton_pressed = False
         self.is_turnrightButton_pressed = False
-        self.is_relaxButton_pressed = False
-        self.is_balanceButton_pressed = False
+
 
         # Connect the timer timeout signal to the send method
         self.forwardButtonTimer.timeout.connect(lambda: self.send_message_to_server("1") if self.is_forwardButton_pressed else None)
-        self.buzzerButtonTimer.timeout.connect(lambda: self.send_message_to_server("2") if self.is_buzzerButton_pressed else None)
         self.backwardButtonTimer.timeout.connect(lambda: self.send_message_to_server("3") if self.is_backwardButton_pressed else None)
         self.stepleftButtonTimer.timeout.connect(lambda: self.send_message_to_server("4") if self.is_stepleftButton_pressed else None)
         self.turnleftButtonTimer.timeout.connect(lambda: self.send_message_to_server("5") if self.is_turnleftButton_pressed else None)
         self.steprightButtonTimer.timeout.connect(lambda: self.send_message_to_server("6") if self.is_steprightButton_pressed else None)
         self.turnrightButtonTimer.timeout.connect(lambda: self.send_message_to_server("7") if self.is_turnrightButton_pressed else None)
-        self.relaxButtonTimer.timeout.connect(lambda: self.send_message_to_server("8") if self.is_relaxButton_pressed else None)
-        self.balanceButtonTimer.timeout.connect(lambda: self.send_message_to_server("9") if self.is_balanceButton_pressed else None)
         
         # Set the timer interval (in milliseconds)
         self.forwardButtonTimer.setInterval(100)  # Modify this as needed
-        self.buzzerButtonTimer.setInterval(100)  # Modify this as needed
         self.backwardButtonTimer.setInterval(100)  # Modify this as needed
         self.stepleftButtonTimer.setInterval(100)  # Modify this as needed
         self.turnleftButtonTimer.setInterval(100)  # Modify this as needed
         self.steprightButtonTimer.setInterval(100)  # Modify this as needed
         self.turnrightButtonTimer.setInterval(100)  # Modify this as needed
-        self.relaxButtonTimer.setInterval(100)  # Modify this as needed
-        self.balanceButtonTimer.setInterval(100)  # Modify this as needed
+        
+    def listen_to_server(self):
+        while self.isConnected:
+            while True:  # Keep running indefinitely
+                # Check if the socket is initialized and connected
+                if self.sock is None:
+                    print("Socket is not connected")
+                    time.sleep(1)  # Wait for a bit before checking again
+                    continue  # Skip the rest of the loop
+
+                # Wait for a message from the server
+                try:
+                    data = self.sock.recv(1024)
+                except Exception as e:
+                    print(f"Error receiving data from socket: {e}")
+                    self.sock = None  # Mark the socket as closed
+                    continue  # Skip the rest of the loop
+
+                if not data:  # If there is no data, the server has closed the connection
+                    print("Server closed the connection")
+                    self.sock = None  # Mark the socket as closed
+                    break
+
+                # The rest of your code...
+
+
+    def update_progress(self):
+        global globalVar
+        self.progressBar.setValue(globalVar)
     
      # Required for server    
     def send_message_to_server(self, message):
@@ -396,6 +407,24 @@ class Ui_MainWindow(object):
             print("Not connected to a server")
             return
         self.sock.sendall(message.encode())
+        
+    def start_server_thread(self):
+        if self.sock is not None:
+            self.server_thread = ServerThread(self.sock)
+            self.server_thread.messageReceived.connect(self.handle_server_message)
+            self.server_thread.start()
+
+    def handle_server_message(self, message):
+        print(f"Message from server: {message}")
+        global globalVar
+        # assuming your battery value message is prefixed with 'B'
+        if message.startswith('B'):
+            try:
+                battery_value = int(message[1:])  # skip the 'B' prefix
+                globalVar = battery_value  # update the global battery value
+            except ValueError:
+                print("Received invalid battery value")
+
 
     def connect_to_server(self):
         if self.sock is not None:
@@ -405,7 +434,20 @@ class Ui_MainWindow(object):
         server_ip = self.connectAddresInput.toPlainText()
         server_port = 8080  # Change this to your server's port
         self.sock.connect((server_ip, server_port))
-        print(f"Connected to server at {server_ip}:{server_port}")    
+        print(f"Connected to server at {server_ip}:{server_port}")
+        self.isConnected = True  # Set connected to true
+
+        # Start the server thread after connecting
+        self.start_server_thread()
+
+        # Start listening to server after connecting
+        self.listen_thread.start()
+        
+    def disconnect_from_server(self):  # Add a disconnect function
+        if self.sock is not None:
+            self.sock.close()
+            self.isConnected = False  # Set connected to false
+        print("Disconnected from server")
 
 
     def retranslateUi(self, MainWindow):
