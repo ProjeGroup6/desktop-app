@@ -1,6 +1,9 @@
 import socket
 import threading
 import time
+import subprocess
+from Control import *
+from Buzzer import *
 
 
 def receive_message(sock):
@@ -40,7 +43,7 @@ def cameraSender():
 
     # Create a socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host = "127.0.0.1"  # Replace with the IP address of the receiver computer
+    host = "192.168.36.205"  # Replace with the IP address of the receiver computer
     port = 9000  # Choose a suitable port number
     sock.connect((host, port))
 
@@ -90,16 +93,39 @@ def main():
         # Start new threads to continuously send battery status updates and decrement battery value
         threading.Thread(target=send_battery_status, args=(new_sock, battery)).start()
         threading.Thread(target=decrement_battery, args=(battery,)).start()
-
+        control = Control()
+        buzzer = Buzzer()
         while True:
             message = receive_message(new_sock)
             if message is None:
-                break
+                continue
+            while True:
+                message = receive_message(new_sock)
+                if message == "1":
+                    control.forWard()
+                elif message == "3":
+                    control.backWard()
+                elif message == "4":
+                    control.setpLeft()
+                elif message == "6":
+                    control.setpRight()
+                elif message == "5":
+                    control.turnLeft()
+                elif message == "7":
+                    control.turnRight()
+                elif message == "2":
+                    buzzer.run("1")
+                    time.sleep(0.5)
+                    buzzer.run("0")
+                elif message == "8":
+                    print("relax")
+                elif message == "9":
+                    print("balance")
+                elif message == "12":
+                    # create a thread for cameraSender function
+                    threading.Thread(target=cameraSender).start()
 
-            print("MESSAGE:", message)
-            if message == "12":
-                threading.Thread(target=cameraSender).start()
-
+                # subprocess.Popen(["sudo python", "sender.py"])
         new_sock.close()
 
     listen_sock.close()

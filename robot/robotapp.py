@@ -6,6 +6,8 @@ import socket
 import time
 
 globalVar = 55
+delay = 1
+
 
 # For camera
 class RunThread(QtCore.QThread):
@@ -15,9 +17,10 @@ class RunThread(QtCore.QThread):
         import socket  # Import the socket module here
         import cv2  # Import the cv2 module here
         import numpy as np  # Import numpy module here
+
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host = "0.0.0.0"  # Listen on all available network interfaces
-        port = 7070  # Use the same port number as in the sender
+        port = 9000  # Use the same port number as in the sender
         sock.bind((host, port))
         sock.listen(1)
 
@@ -43,8 +46,8 @@ class RunThread(QtCore.QThread):
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image = QImage(frame.data, width, height, QImage.Format_RGB888)
             self.changePixmap.emit(image)
-            
-            
+
+
 class ServerThread(QtCore.QThread):
     messageReceived = QtCore.pyqtSignal(str)
 
@@ -60,7 +63,6 @@ class ServerThread(QtCore.QThread):
             self.messageReceived.emit(data.decode())
 
 
-
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -68,14 +70,14 @@ class Ui_MainWindow(object):
         MainWindow.setStyleSheet("background: #1E2128;")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        
+
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
         self.progressBar.setGeometry(QtCore.QRect(20, 70, 241, 31))
         self.progressBar.setStyleSheet("color:white;")
         self.progressBar.setProperty("value", 24)
         self.progressBar.setTextDirection(QtWidgets.QProgressBar.BottomToTop)
         self.progressBar.setObjectName("progressBar")
-        
+
         self.connectAddresInput = QtWidgets.QTextEdit(self.centralwidget)
         self.connectAddresInput.setGeometry(QtCore.QRect(280, 70, 191, 31))
         self.connectAddresInput.setStyleSheet("background: white;")
@@ -96,13 +98,15 @@ class Ui_MainWindow(object):
 
         self.speedlabel = QtWidgets.QLabel(self.centralwidget)
         self.speedlabel.setGeometry(QtCore.QRect(500, 180, 47, 13))
-        self.speedlabel.setStyleSheet("color:white;background: #1E2128;\n"
-"border: none;")
+        self.speedlabel.setStyleSheet(
+            "color:white;background: #1E2128;\n" "border: none;"
+        )
         self.speedlabel.setObjectName("speedlabel")
         self.speedValuelabel = QtWidgets.QLabel(self.centralwidget)
         self.speedValuelabel.setGeometry(QtCore.QRect(500, 470, 47, 13))
-        self.speedValuelabel.setStyleSheet("color:white;background: #1E2128;\n"
-"border: none;")
+        self.speedValuelabel.setStyleSheet(
+            "color:white;background: #1E2128;\n" "border: none;"
+        )
         self.speedValuelabel.setText("")
         self.speedValuelabel.setObjectName("speedValuelabel")
         self.cameraframe = QtWidgets.QFrame(self.centralwidget)
@@ -117,8 +121,9 @@ class Ui_MainWindow(object):
         self.openCameraButton.setObjectName("openCameraButton")
         self.remoteControlBackgroundlabel = QtWidgets.QLabel(self.centralwidget)
         self.remoteControlBackgroundlabel.setGeometry(QtCore.QRect(10, 220, 311, 241))
-        self.remoteControlBackgroundlabel.setStyleSheet("background: #262932;\n"
-"border: none;")
+        self.remoteControlBackgroundlabel.setStyleSheet(
+            "background: #262932;\n" "border: none;"
+        )
         self.remoteControlBackgroundlabel.setText("")
         self.remoteControlBackgroundlabel.setObjectName("remoteControlBackgroundlabel")
         self.balanceButton = QtWidgets.QPushButton(self.centralwidget)
@@ -131,8 +136,9 @@ class Ui_MainWindow(object):
         self.steprightButton.setObjectName("steprightButton")
         self.remoterControllabel = QtWidgets.QLabel(self.centralwidget)
         self.remoterControllabel.setGeometry(QtCore.QRect(120, 230, 111, 31))
-        self.remoterControllabel.setStyleSheet("color:white;background: #262932;\n"
-"border: none;")
+        self.remoterControllabel.setStyleSheet(
+            "color:white;background: #262932;\n" "border: none;"
+        )
         self.remoterControllabel.setObjectName("remoterControllabel")
         self.turnrightButton = QtWidgets.QPushButton(self.centralwidget)
         self.turnrightButton.setGeometry(QtCore.QRect(210, 330, 81, 31))
@@ -152,13 +158,11 @@ class Ui_MainWindow(object):
         self.buzzerButton.setObjectName("buzzerButton")
         self.stepleftButton = QtWidgets.QPushButton(self.centralwidget)
         self.stepleftButton.setGeometry(QtCore.QRect(30, 290, 81, 31))
-        self.stepleftButton.setStyleSheet("background: #59737A;\n"
-"color:white;")
+        self.stepleftButton.setStyleSheet("background: #59737A;\n" "color:white;")
         self.stepleftButton.setObjectName("stepleftButton")
         self.forwardButton = QtWidgets.QPushButton(self.centralwidget)
         self.forwardButton.setGeometry(QtCore.QRect(120, 270, 81, 31))
-        self.forwardButton.setStyleSheet("background: #59737A;\n"
-"color:white;")
+        self.forwardButton.setStyleSheet("background: #59737A;\n" "color:white;")
         self.forwardButton.setObjectName("forwardButton")
         self.turnleftButton = QtWidgets.QPushButton(self.centralwidget)
         self.turnleftButton.setGeometry(QtCore.QRect(30, 330, 81, 31))
@@ -166,8 +170,9 @@ class Ui_MainWindow(object):
         self.turnleftButton.setObjectName("turnleftButton")
         self.autonomousbackgroundlabel = QtWidgets.QLabel(self.centralwidget)
         self.autonomousbackgroundlabel.setGeometry(QtCore.QRect(340, 220, 121, 241))
-        self.autonomousbackgroundlabel.setStyleSheet("background: #262932;\n"
-"border: none;")
+        self.autonomousbackgroundlabel.setStyleSheet(
+            "background: #262932;\n" "border: none;"
+        )
         self.autonomousbackgroundlabel.setText("")
         self.autonomousbackgroundlabel.setObjectName("autonomousbackgroundlabel")
         self.stopButton = QtWidgets.QPushButton(self.centralwidget)
@@ -180,8 +185,9 @@ class Ui_MainWindow(object):
         self.startButton.setObjectName("startButton")
         self.autonomouslabel = QtWidgets.QLabel(self.centralwidget)
         self.autonomouslabel.setGeometry(QtCore.QRect(370, 230, 91, 31))
-        self.autonomouslabel.setStyleSheet("color:white;background: #262932;\n"
-"border: none;")
+        self.autonomouslabel.setStyleSheet(
+            "color:white;background: #262932;\n" "border: none;"
+        )
         self.autonomouslabel.setObjectName("autonomouslabel")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -199,7 +205,9 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         # Set up the cameraframe to display images
         self.image_label = QtWidgets.QLabel(self.cameraframe)
-        self.image_label.setGeometry(QtCore.QRect(0, 0, 451, 391))  # Use same geometry as cameraframe
+        self.image_label.setGeometry(
+            QtCore.QRect(0, 0, 451, 391)
+        )  # Use same geometry as cameraframe
         self.image_label.setScaledContents(True)
 
         # Initialize video stream thread
@@ -208,10 +216,10 @@ class Ui_MainWindow(object):
         # Connect button and video stream thread
         self.openCameraButton.clicked.connect(self.start_video_stream)
         self.video_stream_thread.changePixmap.connect(self.set_camera_image)
-        
-        #Functions of the buttons
+
+        # Functions of the buttons
         self.connectButton.clicked.connect(self.connect_to_server)
-        
+
         self.forwardButton.clicked.connect(lambda: self.send_message_to_server("1"))
         self.buzzerButton.clicked.connect(lambda: self.send_message_to_server("2"))
         self.backwardButton.clicked.connect(lambda: self.send_message_to_server("3"))
@@ -224,7 +232,7 @@ class Ui_MainWindow(object):
         self.startButton.clicked.connect(lambda: self.send_message_to_server("10"))
         self.stopButton.clicked.connect(lambda: self.send_message_to_server("11"))
         self.openCameraButton.clicked.connect(lambda: self.send_message_to_server("12"))
-        
+
         # When the button is pressed, start the timer and set the flag
         self.forwardButton.pressed.connect(self.forwardButton_pressed)
         self.backwardButton.pressed.connect(self.backwardButton_pressed)
@@ -233,7 +241,6 @@ class Ui_MainWindow(object):
         self.steprightButton.pressed.connect(self.steprightButton_pressed)
         self.turnrightButton.pressed.connect(self.turnrightButton_pressed)
 
-
         # When the button is released, stop the timer and unset the flag
         self.forwardButton.released.connect(self.forwardButton_released)
         self.backwardButton.released.connect(self.backwardButton_released)
@@ -241,14 +248,11 @@ class Ui_MainWindow(object):
         self.turnleftButton.released.connect(self.turnleftButton_released)
         self.steprightButton.released.connect(self.steprightButton_released)
         self.turnrightButton.released.connect(self.turnrightButton_released)
-       
-       
 
     def update_progress(self):
         global globalVar
         self.progressBar.setValue(globalVar)
 
-        
     def forwardButton_pressed(self):
         self.is_forwardButton_pressed = True
         self.forwardButtonTimer.start()
@@ -256,7 +260,7 @@ class Ui_MainWindow(object):
     def forwardButton_released(self):
         self.is_forwardButton_pressed = False
         self.forwardButtonTimer.stop()
-        
+
     def backwardButton_pressed(self):
         self.is_backwardButton_pressed = True
         self.backwardButtonTimer.start()
@@ -264,8 +268,7 @@ class Ui_MainWindow(object):
     def backwardButton_released(self):
         self.is_backwardButton_pressed = False
         self.backwardButtonTimer.stop()
-        
-        
+
     def stepleftButton_pressed(self):
         self.is_stepleftButton_pressed = True
         self.stepleftButtonTimer.start()
@@ -273,8 +276,7 @@ class Ui_MainWindow(object):
     def stepleftButton_released(self):
         self.is_stepleftButton_pressed = False
         self.stepleftButtonTimer.stop()
-        
-        
+
     def turnleftButton_pressed(self):
         self.is_turnleftButton_pressed = True
         self.turnleftButtonTimer.start()
@@ -282,8 +284,7 @@ class Ui_MainWindow(object):
     def turnleftButton_released(self):
         self.is_turnleftButton_pressed = False
         self.turnleftButtonTimer.stop()
-        
-        
+
     def steprightButton_pressed(self):
         self.is_steprightButton_pressed = True
         self.steprightButtonTimer.start()
@@ -291,8 +292,7 @@ class Ui_MainWindow(object):
     def steprightButton_released(self):
         self.is_steprightButton_pressed = False
         self.steprightButtonTimer.stop()
-        
-        
+
     def turnrightButton_pressed(self):
         self.is_turnrightButton_pressed = True
         self.turnrightButtonTimer.start()
@@ -300,10 +300,8 @@ class Ui_MainWindow(object):
     def turnrightButton_released(self):
         self.is_turnrightButton_pressed = False
         self.turnrightButtonTimer.stop()
-        
-          
-          
-     # Slot for handling the valueChanged signal
+
+    # Slot for handling the valueChanged signal
     def updateSpeedValue(self, value):
         self.speedValuelabel.setText(str(value))
         # Send the new value to the server
@@ -314,27 +312,28 @@ class Ui_MainWindow(object):
         if self.sock is None:
             print("Not connected to a server")
             return
-        self.sock.sendall(('S' + message).encode())
- 
- 
-    # Required for camera    
+        self.sock.sendall(("S" + message).encode())
+
+    # Required for camera
     def start_video_stream(self):
         self.video_stream_thread.start()
+
     def set_camera_image(self, image):
         pixmap = QPixmap.fromImage(image)
         self.image_label.setPixmap(pixmap)
-      
-        
+
     def __init__(self):
         self.sock = None
         self.server_thread = None
         self.isConnected = False
-        
+
         # Create a thread that will listen for incoming messages
         self.listen_thread = QThread()
-        self.listen_thread.run = self.listen_to_server  # The run method is the entry point into the thread
+        self.listen_thread.run = (
+            self.listen_to_server
+        )  # The run method is the entry point into the thread
         self.listen_thread.start()
-       
+
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update_progress)
         self.timer.start(1000)  # update every second
@@ -355,23 +354,46 @@ class Ui_MainWindow(object):
         self.is_steprightButton_pressed = False
         self.is_turnrightButton_pressed = False
 
-
         # Connect the timer timeout signal to the send method
-        self.forwardButtonTimer.timeout.connect(lambda: self.send_message_to_server("1") if self.is_forwardButton_pressed else None)
-        self.backwardButtonTimer.timeout.connect(lambda: self.send_message_to_server("3") if self.is_backwardButton_pressed else None)
-        self.stepleftButtonTimer.timeout.connect(lambda: self.send_message_to_server("4") if self.is_stepleftButton_pressed else None)
-        self.turnleftButtonTimer.timeout.connect(lambda: self.send_message_to_server("5") if self.is_turnleftButton_pressed else None)
-        self.steprightButtonTimer.timeout.connect(lambda: self.send_message_to_server("6") if self.is_steprightButton_pressed else None)
-        self.turnrightButtonTimer.timeout.connect(lambda: self.send_message_to_server("7") if self.is_turnrightButton_pressed else None)
-        
+        self.forwardButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("1")
+            if self.is_forwardButton_pressed
+            else None
+        )
+        self.backwardButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("3")
+            if self.is_backwardButton_pressed
+            else None
+        )
+        self.stepleftButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("4")
+            if self.is_stepleftButton_pressed
+            else None
+        )
+        self.turnleftButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("5")
+            if self.is_turnleftButton_pressed
+            else None
+        )
+        self.steprightButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("6")
+            if self.is_steprightButton_pressed
+            else None
+        )
+        self.turnrightButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("7")
+            if self.is_turnrightButton_pressed
+            else None
+        )
+
         # Set the timer interval (in milliseconds)
-        self.forwardButtonTimer.setInterval(100)  # Modify this as needed
-        self.backwardButtonTimer.setInterval(100)  # Modify this as needed
-        self.stepleftButtonTimer.setInterval(100)  # Modify this as needed
-        self.turnleftButtonTimer.setInterval(100)  # Modify this as needed
-        self.steprightButtonTimer.setInterval(100)  # Modify this as needed
-        self.turnrightButtonTimer.setInterval(100)  # Modify this as needed
-        
+        self.forwardButtonTimer.setInterval(delay)  # Modify this as needed
+        self.backwardButtonTimer.setInterval(delay)  # Modify this as needed
+        self.stepleftButtonTimer.setInterval(delay)  # Modify this as needed
+        self.turnleftButtonTimer.setInterval(delay)  # Modify this as needed
+        self.steprightButtonTimer.setInterval(delay)  # Modify this as needed
+        self.turnrightButtonTimer.setInterval(delay)  # Modify this as needed
+
     def listen_to_server(self):
         while self.isConnected:
             while True:  # Keep running indefinitely
@@ -389,25 +411,26 @@ class Ui_MainWindow(object):
                     self.sock = None  # Mark the socket as closed
                     continue  # Skip the rest of the loop
 
-                if not data:  # If there is no data, the server has closed the connection
+                if (
+                    not data
+                ):  # If there is no data, the server has closed the connection
                     print("Server closed the connection")
                     self.sock = None  # Mark the socket as closed
                     break
 
                 # The rest of your code...
 
-
     def update_progress(self):
         global globalVar
         self.progressBar.setValue(globalVar)
-    
-     # Required for server    
+
+    # Required for server
     def send_message_to_server(self, message):
         if self.sock is None:
             print("Not connected to a server")
             return
         self.sock.sendall(message.encode())
-        
+
     def start_server_thread(self):
         if self.sock is not None:
             self.server_thread = ServerThread(self.sock)
@@ -418,13 +441,12 @@ class Ui_MainWindow(object):
         print(f"Message from server: {message}")
         global globalVar
         # assuming your battery value message is prefixed with 'B'
-        if message.startswith('B'):
+        if message.startswith("B"):
             try:
                 battery_value = int(message[1:])  # skip the 'B' prefix
                 globalVar = battery_value  # update the global battery value
             except ValueError:
                 print("Received invalid battery value")
-
 
     def connect_to_server(self):
         if self.sock is not None:
@@ -442,13 +464,12 @@ class Ui_MainWindow(object):
 
         # Start listening to server after connecting
         self.listen_thread.start()
-        
+
     def disconnect_from_server(self):  # Add a disconnect function
         if self.sock is not None:
             self.sock.close()
             self.isConnected = False  # Set connected to false
         print("Disconnected from server")
-
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -473,6 +494,7 @@ class Ui_MainWindow(object):
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
