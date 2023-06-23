@@ -19,12 +19,6 @@ print("Server is listening on {}:{}".format(*server_address))
 client_socket, client_address = server_socket.accept()
 print("Connected to client:", client_address)
 
-# while True:
-#     # Receive data from the client
-#     data = client_socket.recv(1024)
-#     if data:
-#         print('Received from client:', data.decode())
-
 ydlidar.os_init()
 ports = ydlidar.lidarPortList()
 port = "/dev/ydlidar"
@@ -46,27 +40,11 @@ if ret:
     while ret and ydlidar.os_isOk():
         r = laser.doProcessSimple(scan)
         if r:
-            # print(
-            #     "Scan received[",
-            #     scan.stamp,
-            #     "]:",
-            #     scan.points.size(),
-            #     "ranges is [",
-            #     1.0 / scan.config.scan_time,
-            #     "]Hz",
-            # )
             for point in scan.points:
                 angle = int((point.angle * 180 / 3.14 + 360) % 360)
                 distance = point.range
                 print("angle:", angle, " range: ", point.range)
                 points[angle] = distance
-                # client_socket.sendall(
-                #     str(point.angle * 180.0 / 3.14).encode()
-                #     + b" "
-                #     + str(point.range).encode()
-                #     + b"\n"
-                # )
-                # send array via socket
             print(points)
             client_socket.sendall(pickle.dumps(points))
         else:
