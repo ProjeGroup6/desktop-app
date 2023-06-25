@@ -1,3 +1,5 @@
+# The code that we inspired while writing controlServer.
+
 import socket
 import threading
 import time
@@ -18,7 +20,8 @@ def start_message(port):
             new_sock.send(f"B{battery[0]}".encode())
             time.sleep(1)
 
-    def decrement_battery(battery):
+    def get_battery(battery):
+        # burada kutuphaneden batarya okunup array seklinde yollanacak
         while True:
             if battery[0] > 10:
                 battery[0] -= 1
@@ -30,11 +33,12 @@ def start_message(port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Bind the socket to a specific address and port
-    server_socket.bind(("localhost", port))
+    server_socket.bind(("0.0.0.0", port))
 
     # Listen for incoming connections
     server_socket.listen(1)
     print(f"Server listening on port {port}")
+    print(f"Address: {socket.gethostbyname(socket.gethostname())}")
 
     while True:
         # Accept a client connection
@@ -47,7 +51,7 @@ def start_message(port):
         threading.Thread(
             target=send_battery_status, args=(client_socket, battery)
         ).start()
-        threading.Thread(target=decrement_battery, args=(battery,)).start()
+        threading.Thread(target=get_battery, args=(battery,)).start()
 
         while True:
             message = receive_message(client_socket)
@@ -64,11 +68,11 @@ def send_camera(port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Bind the socket to a specific address and port
-    server_socket.bind(("localhost", port))
+    server_socket.bind(("0.0.0.0", port))
+    print(f"Server listening on port {port}")
 
     # Listen for incoming connections
     server_socket.listen(1)
-    print(f"Server listening on port {port}")
 
     while True:
         # Accept a client connection
@@ -103,13 +107,16 @@ def send_camera(port):
         camera.release()
         cv2.destroyAllWindows()
 
+        # Close the client socket
+        client_socket.close()
+
 
 # Start servers on two different ports
-port1 = 8001
-port2 = 9001
+server_port = 8000
+camera_port = 9000
 
-start_message = threading.Thread(target=start_message, args=(port1,))
+start_message = threading.Thread(target=start_message, args=(server_port,))
 start_message.start()
 
-send_camera = threading.Thread(target=send_camera, args=(port2,))
+send_camera = threading.Thread(target=send_camera, args=(camera_port,))
 send_camera.start()

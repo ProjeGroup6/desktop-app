@@ -1,41 +1,46 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QThread, pyqtSignal
+# Desktop application
+# To test on your own computer:
+#   1 - run app.py
+#   2 - Run server.py in ../app-socket
+#   3- Enter the IP that server.py prints on the screen.
+
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import QTimer
 import socket
 import time
 
-globalVar = 55
-delay = 1
+globalVar = 0
+globalFlag = False
+
+delay = 100  # delay for sending messages serial
+
+cameraPort = 9000
+serverPort = 8000
 
 
 # For camera
 class RunThread(QtCore.QThread):
     changePixmap = QtCore.pyqtSignal(QImage)
 
+    def __init__(self, sock, parent=None):
+        super(RunThread, self).__init__(parent)
+        self.sock = sock
+
     def run(self):
-        import socket  # Import the socket module here
         import cv2  # Import the cv2 module here
         import numpy as np  # Import numpy module here
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        host = "0.0.0.0"  # Listen on all available network interfaces
-        port = 9000  # Use the same port number as in the sender
-        sock.bind((host, port))
-        sock.listen(1)
-
-        # Accept a connection
-        conn, addr = sock.accept()
-        print("Connected by", addr)
-
+        print(self.sock)
         while True:
             # Receive the frame size
-            data_size = int.from_bytes(conn.recv(4), byteorder="big")
+            data_size = int.from_bytes(self.sock.recv(4), byteorder="big")
 
             # Receive the frame data
             data = b""
             while len(data) < data_size:
-                packet = conn.recv(data_size - len(data))
+                packet = self.sock.recv(data_size - len(data))
                 if not packet:
                     break
                 data += packet
@@ -74,7 +79,7 @@ class Ui_MainWindow(object):
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
         self.progressBar.setGeometry(QtCore.QRect(20, 70, 241, 31))
         self.progressBar.setStyleSheet("color:white;")
-        self.progressBar.setProperty("value", 24)
+        self.progressBar.setProperty("value", 0)
         self.progressBar.setTextDirection(QtWidgets.QProgressBar.BottomToTop)
         self.progressBar.setObjectName("progressBar")
 
@@ -211,11 +216,8 @@ class Ui_MainWindow(object):
         self.image_label.setScaledContents(True)
 
         # Initialize video stream thread
-        self.video_stream_thread = RunThread()
 
-        # Connect button and video stream thread
-        self.openCameraButton.clicked.connect(self.start_video_stream)
-        self.video_stream_thread.changePixmap.connect(self.set_camera_image)
+        # print("cameraSock: "self.cameraSock)
 
         # Functions of the buttons
         self.connectButton.clicked.connect(self.connect_to_server)
@@ -324,6 +326,7 @@ class Ui_MainWindow(object):
 
     def __init__(self):
         self.sock = None
+        self.cameraSock = None
         self.server_thread = None
         self.isConnected = False
 
@@ -437,6 +440,14 @@ class Ui_MainWindow(object):
             self.server_thread.messageReceived.connect(self.handle_server_message)
             self.server_thread.start()
 
+    def start_camera_thread(self):
+        if self.cameraSock is not None:
+            self.video_stream_thread = RunThread(self.cameraSock)
+
+            # Connect button and video stream thread
+            self.openCameraButton.clicked.connect(self.start_video_stream)
+            self.video_stream_thread.changePixmap.connect(self.set_camera_image)
+
     def handle_server_message(self, message):
         print(f"Message from server: {message}")
         global globalVar
@@ -449,18 +460,31 @@ class Ui_MainWindow(object):
                 print("Received invalid battery value")
 
     def connect_to_server(self):
+        global globalFlag
         if self.sock is not None:
             self.sock.close()
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print(self.sock)
         server_ip = self.connectAddresInput.toPlainText()
-        server_port = 8080  # Change this to your server's port
+        server_port = 8000  # Change this to your server's port
         self.sock.connect((server_ip, server_port))
         print(f"Connected to server at {server_ip}:{server_port}")
-        self.isConnected = True  # Set connected to true
 
+        self.cameraSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_ip = self.connectAddresInput.toPlainText()
+        camera_port = 9000  # Change this to your server's port
+        self.cameraSock.connect((server_ip, camera_port))
+        print(f"Connected to server at {server_ip}:{camera_port}")
+        self.isConnected = True  # Set connected to true
+        globalFlag = True
+        print("sock: ")
+        print(self.sock)
+        print("cameraSock: ")
+        print(self.cameraSock)
         # Start the server thread after connecting
         self.start_server_thread()
+        self.start_camera_thread()
 
         # Start listening to server after connecting
         self.listen_thread.start()

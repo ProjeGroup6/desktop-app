@@ -1,6 +1,7 @@
+# The code we inspired while writing robotapp.
+
 import socket
 import threading
-import time
 import cv2
 import numpy as np
 
@@ -41,6 +42,7 @@ def receive_frames(sock):
             break
 
     cv2.destroyAllWindows()
+    sock.close()
 
 
 def start_client(address, port_message, port_camera):
@@ -75,8 +77,8 @@ def start_client(address, port_message, port_camera):
 
 # Specify the server address and ports
 server_address = "localhost"
-message_port = 8001
-camera_port = 9001
+message_port = 8000
+camera_port = 9000
 
 # Start the client
 start_client(server_address, message_port, camera_port)
