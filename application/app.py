@@ -18,8 +18,8 @@ globalFlag = False
 
 delay = 200  # delay for sending messages serial
 
-cameraPort = 9000
-serverPort = 8000
+CAMERAPORT = 9000
+SERVERPORT = 8000
 
 
 # For camera
@@ -51,44 +51,48 @@ class RunThread(QtCore.QThread):
             frame = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
             height, width, _ = frame.shape
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            
+            # hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-            l_h = cv2.getTrackbarPos("L-H", "Trackbars")
-            l_s = cv2.getTrackbarPos("L-S", "Trackbars")
-            l_v = cv2.getTrackbarPos("L-V", "Trackbars")
-            u_h = cv2.getTrackbarPos("U-H", "Trackbars")
-            u_s = cv2.getTrackbarPos("U-S", "Trackbars")
-            u_v = cv2.getTrackbarPos("U-V", "Trackbars")
+            # l_h = cv2.getTrackbarPos("L-H", "Trackbars")
+            # l_s = cv2.getTrackbarPos("L-S", "Trackbars")
+            # l_v = cv2.getTrackbarPos("L-V", "Trackbars")
+            # u_h = cv2.getTrackbarPos("U-H", "Trackbars")
+            # u_s = cv2.getTrackbarPos("U-S", "Trackbars")
+            # u_v = cv2.getTrackbarPos("U-V", "Trackbars")
 
-            lower_red = np.array([l_h, l_s, l_v])
-            upper_red = np.array([u_h, u_s, u_v])
+            # lower_red = np.array([l_h, l_s, l_v])
+            # upper_red = np.array([u_h, u_s, u_v])
 
-            mask = cv2.inRange(hsv, lower_red, upper_red)
-            kernel = np.ones((5, 5), np.uint8)
-            mask = cv2.erode(mask, kernel)
+            # mask = cv2.inRange(hsv, lower_red, upper_red)
+            # kernel = np.ones((5, 5), np.uint8)
+            # mask = cv2.erode(mask, kernel)
 
-            # Contours detection
-            if int(cv2.__version__[0]) > 3:
-                # Opencv 4.x.x
-                contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            else:
-                # Opencv 3.x.x
-                _, contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            # # Contours detection
+            # if int(cv2.__version__[0]) > 3:
+            #     # Opencv 4.x.x
+            #     contours, hierarchy = cv2.findContours(
+            #         mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+            #     )
+            # else:
+            #     # Opencv 3.x.x
+            #     _, contours, hierarchy = cv2.findContours(
+            #         mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+            #     )
 
-            if hierarchy is not None:
-                hierarchy = hierarchy[0]  # get the first contour
+            # if hierarchy is not None:
+            #     hierarchy = hierarchy[0]  # get the first contour
 
-                for component in zip(contours, hierarchy):
-                    current_contour = component[0]
-                    current_hierarchy = component[1]
-                    x, y, w, h = cv2.boundingRect(current_contour)
-                    area = cv2.contourArea(current_contour)
-                    if current_hierarchy[3] < 0 and area > 10000:
-                        # these are the outermost parent components
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3)
-            else:
-                print("No contours found")
+            #     for component in zip(contours, hierarchy):
+            #         current_contour = component[0]
+            #         current_hierarchy = component[1]
+            #         x, y, w, h = cv2.boundingRect(current_contour)
+            #         area = cv2.contourArea(current_contour)
+            #         if current_hierarchy[3] < 0 and area > 10000:
+            #             # these are the outermost parent components
+            #             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3)
+            # else:
+            #     print("No contours found")
+
             image = QImage(frame.data, width, height, QImage.Format_RGB888)
             self.changePixmap.emit(image)
 
@@ -507,13 +511,13 @@ class Ui_MainWindow(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print(self.sock)
         server_ip = self.connectAddresInput.toPlainText()
-        server_port = 8000  # Change this to your server's port
+        server_port = SERVERPORT  # Change this to your server's port
         self.sock.connect((server_ip, server_port))
         print(f"Connected to server at {server_ip}:{server_port}")
 
         self.cameraSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_ip = self.connectAddresInput.toPlainText()
-        camera_port = 9000  # Change this to your server's port
+        camera_port = CAMERAPORT  # Change this to your server's port
         self.cameraSock.connect((server_ip, camera_port))
         print(f"Connected to server at {server_ip}:{camera_port}")
         self.isConnected = True  # Set connected to true
