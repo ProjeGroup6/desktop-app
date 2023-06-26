@@ -14,7 +14,7 @@ import time
 globalVar = 0
 globalFlag = False
 
-delay = 100  # delay for sending messages serial
+delay = 200  # delay for sending messages serial
 
 cameraPort = 9000
 serverPort = 8000
