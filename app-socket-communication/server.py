@@ -38,7 +38,6 @@ def start_message(port):
     # Listen for incoming connections
     server_socket.listen(1)
     print(f"Server listening on port {port}")
-    print(f"Address: {socket.gethostbyname(socket.gethostname())}")
 
     while True:
         # Accept a client connection
@@ -114,6 +113,8 @@ def send_camera(port):
 # Start servers on two different ports
 server_port = 8000
 camera_port = 9000
+
+print(f"Address: {socket.gethostbyname(socket.gethostname())}")
 
 start_message = threading.Thread(target=start_message, args=(server_port,))
 start_message.start()

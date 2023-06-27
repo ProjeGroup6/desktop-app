@@ -1,3 +1,5 @@
+# lidar icerisinde calistirdigimiz kod. buna simdilik karismayin
+
 import os
 import ydlidar
 import time

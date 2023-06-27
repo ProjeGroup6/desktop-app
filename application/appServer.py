@@ -138,6 +138,8 @@ def send_camera(port):
 server_port = 8000
 camera_port = 9000
 
+print(f"Address: {socket.gethostbyname(socket.gethostname())}")
+
 start_message = threading.Thread(target=start_message, args=(server_port,))
 start_message.start()
 
