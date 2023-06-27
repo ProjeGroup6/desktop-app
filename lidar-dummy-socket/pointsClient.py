@@ -1,3 +1,5 @@
+# Read random points from socket and prints them
+
 import socket
 import threading
 import pickle

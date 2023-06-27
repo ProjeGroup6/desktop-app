@@ -1,3 +1,5 @@
+# Creates random points and prints them to the socket
+
 import random
 import time
 import socket
