@@ -36,31 +36,24 @@ def receive_points(sock):
 
     # Connect the click event handler to the figure
     fig.canvas.mpl_connect("button_press_event", handle_click)
+
     while True:
         # read array
         data = sock.recv(1024)
         if not data:
-            break
-        point = pickle.loads(data)
-        # print(f"angle: {point[0]}")
-        # print(f"distance: {point[1]}")
+            continue
 
-        # get x and y from angle and distance and append coordinates
-        x = point[1] * math.cos(math.radians(point[0]))
-        y = point[1] * math.sin(math.radians(point[0]))
+        points = pickle.loads(data)
 
-        # print x and y
-        # print(f"x: {x}")
-        # print(f"y: {y}")
+        # each index is an angle and points[index] is a distance
+        for i in range(0, 360):
+            # get x and y from angle and distance
+            x = points[i] * math.cos(math.radians(i))
+            y = points[i] * math.sin(math.radians(i))
 
-        x_coordinates.append(x)
-        y_coordinates.append(y)
-
-        # Update the graph
-        update_graph()
-
-    plt.show()  # Display the final graph
-    sock.close()
+            x_coordinates.append(x)
+            y_coordinates.append(y)
+            update_graph()
 
 
 def start_client(address, port_points):
