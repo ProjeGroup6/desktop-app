@@ -76,7 +76,7 @@ def start_client(address, port_message, port_camera):
 
 
 # Specify the server address and ports
-server_address = "localhost"
+server_address = input("Enter server address: ")
 message_port = 8000
 camera_port = 9000
 
