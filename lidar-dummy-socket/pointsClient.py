@@ -3,7 +3,6 @@
 import socket
 import threading
 import pickle
-import time
 
 
 def receive_points(sock):
@@ -11,11 +10,9 @@ def receive_points(sock):
         # read array
         data = sock.recv(1024)
         if not data:
-            break
-        point = pickle.loads(data)
-        print(f"angle: {point[0]}")
-        print(f"distance: {point[1]}")
-        time.sleep(0.01)
+            continue
+        points = pickle.loads(data)
+        print(points)
 
 
 def start_client(address, port_points):

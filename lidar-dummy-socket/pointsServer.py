@@ -7,12 +7,16 @@ import pickle
 import threading
 
 
-# create a random point array, point[0] is angle and point[1] is distance
+# create a random point array, index is angle and points[index] is distance
 def createRandomPoint():
-    point = []
-    point.append(random.randint(0, 360))
-    point.append(random.randint(0, 100))
-    return point
+    points = [None] * 360
+    # loop for points
+    for i in range(0, 360):
+        # create random distance
+        distance = random.randint(0, 100)
+        # add distance to points
+        points[i] = distance
+    return points
 
 
 def send_points(port):
@@ -35,8 +39,7 @@ def send_points(port):
             # create random points and write them to the socket
             point = createRandomPoint()
             client_socket.sendall(pickle.dumps(point))
-            time.sleep(0.01)
-
+            time.sleep(0.05)
         # close the socket
         client_socket.close()
 
