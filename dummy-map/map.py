@@ -23,7 +23,7 @@ def receive_points(sock):
         plt.ylabel("Y")
         plt.title("Graph")
         plt.draw()  # Update the graph without blocking the program
-        plt.pause(0.001)  # Pause to allow the graph to be displayed
+        plt.pause(0.00001)  # Pause to allow the graph to be displayed
 
     # Handle point clicks
     def handle_click(event):
@@ -53,7 +53,7 @@ def receive_points(sock):
 
             x_coordinates.append(x)
             y_coordinates.append(y)
-            update_graph()
+        update_graph()
 
 
 def start_client(address, port_points):
