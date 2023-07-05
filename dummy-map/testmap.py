@@ -15,9 +15,6 @@ def receive_points(sock):
     def update_graph():
         x_coordinates = list(coordinates.keys())
         y_coordinates = list(coordinates.values())
-        # print key and values
-        print(x_coordinates)
-        print(y_coordinates)
 
         plt.scatter(
             x_coordinates, y_coordinates, color="red", s=10
@@ -50,9 +47,9 @@ def receive_points(sock):
 
         # Each index is an angle and points[index] is a distance
         for i in range(0, 360):
-            # Get x and y from angle and distance
-            x = int(points[i] * math.cos(math.radians(i)))
-            y = int(points[i] * math.sin(math.radians(i)))
+            # Get x and y from angle and distance and round them to near int number
+            x = round(points[i] * math.cos(math.radians(i)))
+            y = round(points[i] * math.sin(math.radians(i)))
 
             coordinates[x] = y
 
