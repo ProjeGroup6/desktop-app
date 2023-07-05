@@ -1,6 +1,10 @@
+# This is a based code that should be improved
+# !!! this map is using array and not optimized
+# Read random points from socket and prints them
 import socket
 import threading
 import pickle
+import time
 
 
 def receive_points(sock):
@@ -9,13 +13,11 @@ def receive_points(sock):
     import matplotlib.pyplot as plt
 
     matplotlib.use("TkAgg")
-    # Initialize an empty dictionary to store x and y coordinates
-    coordinates = {}
+    # Initialize empty lists to store x and y coordinates
+    x_coordinates = []
+    y_coordinates = []
 
     def update_graph():
-        x_coordinates = list(coordinates.keys())
-        y_coordinates = list(coordinates.values())
-
         plt.scatter(
             x_coordinates, y_coordinates, color="red", s=10
         )  # Set the color and size of the points
@@ -38,21 +40,21 @@ def receive_points(sock):
     fig.canvas.mpl_connect("button_press_event", handle_click)
 
     while True:
-        # Read array
+        # read array
         data = sock.recv(1024)
         if not data:
             continue
 
         points = pickle.loads(data)
 
-        # Each index is an angle and points[index] is a distance
+        # each index is an angle and points[index] is a distance
         for i in range(0, 360):
-            # Get x and y from angle and distance and round them to near int number
-            x = round(points[i] * math.cos(math.radians(i)))
-            y = round(points[i] * math.sin(math.radians(i)))
+            # get x and y from angle and distance
+            x = points[i] * math.cos(math.radians(i))
+            y = points[i] * math.sin(math.radians(i))
 
-            coordinates[x] = y
-
+            x_coordinates.append(x)
+            y_coordinates.append(y)
         update_graph()
 
 
