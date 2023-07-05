@@ -9,53 +9,52 @@ import sys
 
 matplotlib.use("TkAgg")
 
+# def receive_points(sock):
+#     # Initialize an empty dictionary to store x and y coordinates
+#     coordinates = {}
 
-def receive_points(sock):
-    # Initialize an empty dictionary to store x and y coordinates
-    coordinates = {}
+#     def update_graph():
+#         x_coordinates = list(coordinates.keys())
+#         y_coordinates = list(coordinates.values())
 
-    def update_graph():
-        x_coordinates = list(coordinates.keys())
-        y_coordinates = list(coordinates.values())
+#         plt.scatter(
+#             x_coordinates, y_coordinates, color="red", s=10
+#         )  # Set the color and size of the points
+#         plt.xlabel("X")
+#         plt.ylabel("Y")
+#         plt.title("Graph")
+#         plt.draw()  # Update the graph without blocking the program
+#         plt.pause(0.00001)  # Pause to allow the graph to be displayed
 
-        plt.scatter(
-            x_coordinates, y_coordinates, color="red", s=10
-        )  # Set the color and size of the points
-        plt.xlabel("X")
-        plt.ylabel("Y")
-        plt.title("Graph")
-        plt.draw()  # Update the graph without blocking the program
-        plt.pause(0.00001)  # Pause to allow the graph to be displayed
+#     # Handle point clicks
+#     def handle_click(event):
+#         if event.button == 1:  # Left mouse button
+#             clicked_point = (event.xdata, event.ydata)
+#             print("Clicked point:", clicked_point)
 
-    # Handle point clicks
-    def handle_click(event):
-        if event.button == 1:  # Left mouse button
-            clicked_point = (event.xdata, event.ydata)
-            print("Clicked point:", clicked_point)
+#     # Create a figure and axis objects
+#     fig, ax = plt.subplots()
 
-    # Create a figure and axis objects
-    fig, ax = plt.subplots()
+#     # Connect the click event handler to the figure
+#     fig.canvas.mpl_connect("button_press_event", handle_click)
 
-    # Connect the click event handler to the figure
-    fig.canvas.mpl_connect("button_press_event", handle_click)
+#     while True:
+#         # Read array
+#         data = sock.recv(1024)
+#         if not data:
+#             continue
 
-    while True:
-        # Read array
-        data = sock.recv(1024)
-        if not data:
-            continue
+#         points = pickle.loads(data)
 
-        points = pickle.loads(data)
+#         # Each index is an angle and points[index] is a distance
+#         for i in range(0, 360):
+#             # Get x and y from angle and distance and round them to near int number
+#             x = round(points[i] * math.cos(math.radians(i)))
+#             y = round(points[i] * math.sin(math.radians(i)))
 
-        # Each index is an angle and points[index] is a distance
-        for i in range(0, 360):
-            # Get x and y from angle and distance and round them to near int number
-            x = round(points[i] * math.cos(math.radians(i)))
-            y = round(points[i] * math.sin(math.radians(i)))
+#             coordinates[x] = y
 
-            coordinates[x] = y
-
-        update_graph()
+#         update_graph()
 
 
 def start_client(address, points_port):
