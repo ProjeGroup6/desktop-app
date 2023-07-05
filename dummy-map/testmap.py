@@ -51,8 +51,8 @@ def receive_points(sock):
         # Each index is an angle and points[index] is a distance
         for i in range(0, 360):
             # Get x and y from angle and distance
-            x = points[i] * math.cos(math.radians(i))
-            y = points[i] * math.sin(math.radians(i))
+            x = int(points[i] * math.cos(math.radians(i)))
+            y = int(points[i] * math.sin(math.radians(i)))
 
             coordinates[x] = y
 
