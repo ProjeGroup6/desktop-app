@@ -35,15 +35,24 @@ class MainWindow(QMainWindow):
         self.timer.start(1)  # Add a new point every second
 
     def generate_point(self):
+        points = {}
+
         # Generate a random point
-        x = np.random.normal()
-        y = np.random.normal()
+        x = round(np.random.normal())
+        y = round(np.random.normal())
 
-        # Add the point to the scatter plot item
-        self.scatter.addPoints([x], [y])
+        # print size of the points dictionary
+        # print(len(points))
 
-        # Update the plot range to fit all points
-        self.plot_widget.autoRange()
+        if (x, y) not in points:
+            print("aaa")
+            points[(x, y)] = True
+            # Add the point to the scatter plot item
+            self.scatter.addPoints([x], [y])
+            # Update the plot range to fit all points
+            self.plot_widget.autoRange()
+        else:
+            print("bbbbb")
 
     def onclick(self, event):
         # Get the position of the clicked point
