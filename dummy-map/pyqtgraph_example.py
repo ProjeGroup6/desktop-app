@@ -18,9 +18,6 @@ class MainWindow(QMainWindow):
         # Create a plot widget and add the scatter plot item to it
         self.plot_widget = pg.PlotWidget()
         self.plot_widget.addItem(self.scatter)
-        self.plot_widget.scene().sigMouseClicked.connect(
-            self.onclick
-        )  # Connect the onclick event
 
         # Set up the main window
         central_widget = QWidget()
@@ -29,38 +26,27 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
+        # Set to store added points
+        self.added_points = set()
+
         # Generate points in a loop
         self.timer = QTimer()
         self.timer.timeout.connect(self.generate_point)
         self.timer.start(1)  # Add a new point every second
 
     def generate_point(self):
-        points = {}
-
         # Generate a random point
         x = round(np.random.normal())
         y = round(np.random.normal())
 
-        # print size of the points dictionary
-        # print(len(points))
-
-        if (x, y) not in points:
-            print("aaa")
-            points[(x, y)] = True
+        # Check if the point already exists
+        if (x, y) not in self.added_points:
             # Add the point to the scatter plot item
             self.scatter.addPoints([x], [y])
+            self.added_points.add((x, y))
+
             # Update the plot range to fit all points
             self.plot_widget.autoRange()
-        else:
-            print("bbbbb")
-
-    def onclick(self, event):
-        # Get the position of the clicked point
-        pos = event.scenePos()
-        x, y = pos.x(), pos.y()
-
-        # Print the coordinates
-        print(f"Clicked at ({x}, {y})")
 
 
 if __name__ == "__main__":
