@@ -38,27 +38,31 @@ class MainWindow(QMainWindow):
         self.timer.start(1)  # Add a new point every second
 
     def generate_point(self):
-        # Generate a random point
-        x = round(np.random.normal())
-        y = round(np.random.normal())
+        # Generate a 360 sized data array and fill this array between 0 and 100
+        data = np.random.randint(0, 100, 360)
 
-        # Check if the point already exists
-        if (x, y) not in self.added_points:
-            # Add the point to the scatter plot item
-            if x > 0 and y > 0:
-                brush = pg.mkBrush(
-                    0, 255, 0, 120
-                )  # Green color for points in the positive quadrant
-            else:
-                brush = pg.mkBrush(
-                    (255, 0, 0, 120)
-                )  # Red color for points in the other quadrants
+        # traverse data in for loop
+        for i in range(len(data)):
+            # get x and y with angle and distance
+            x = round(data[i] * np.cos(np.deg2rad(i)))
+            y = round(data[i] * np.sin(np.deg2rad(i)))
+            # Check if the point already exists
+            if (x, y) not in self.added_points:
+                # Add the point to the scatter plot item
+                if x > 0 and y > 0:
+                    brush = pg.mkBrush(
+                        0, 255, 0, 120
+                    )  # Green color for points in the positive quadrant
+                else:
+                    brush = pg.mkBrush(
+                        (255, 0, 0, 120)
+                    )  # Red color for points in the other quadrants
 
-            self.scatter.addPoints([x], [y], brush=brush)
-            self.added_points.add((x, y))
+                self.scatter.addPoints([x], [y], brush=brush)
+                self.added_points.add((x, y))
 
-            # Update the plot range to fit all points
-            self.plot_widget.autoRange()
+                # Update the plot range to fit all points
+                self.plot_widget.autoRange()
 
     def plot_clicked(self, event):
         # Get the coordinates of the clicked point
