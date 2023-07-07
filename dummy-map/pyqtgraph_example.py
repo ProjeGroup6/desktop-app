@@ -29,13 +29,13 @@ class MainWindow(QMainWindow):
         # Set to store added points
         self.added_points = set()
 
+        # Connect the signal to the slot for mouse clicks on the plot
+        self.plot_widget.scene().sigMouseClicked.connect(self.plot_clicked)
+
         # Generate points in a loop
         self.timer = QTimer()
         self.timer.timeout.connect(self.generate_point)
         self.timer.start(1)  # Add a new point every second
-
-        # Connect the signal to handle plot clicks
-        self.plot_widget.scene().sigMouseClicked.connect(self.plot_clicked)
 
     def generate_point(self):
         # Generate a random point
@@ -52,11 +52,10 @@ class MainWindow(QMainWindow):
             self.plot_widget.autoRange()
 
     def plot_clicked(self, event):
-        if event.button() == pg.QtCore.Qt.LeftButton:
-            pos = event.pos()
-            point = self.plot_widget.plotItem.vb.mapSceneToView(pos)
-            x, y = point.x(), point.y()
-            print(f"Clicked coordinates: ({x}, {y})")
+        # Get the coordinates of the clicked point
+        point = self.plot_widget.plotItem.vb.mapSceneToView(event.scenePos())
+        x, y = point.x(), point.y()
+        print("Clicked at coordinates:", x, y)
 
 
 if __name__ == "__main__":
