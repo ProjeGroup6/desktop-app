@@ -45,7 +45,16 @@ class MainWindow(QMainWindow):
         # Check if the point already exists
         if (x, y) not in self.added_points:
             # Add the point to the scatter plot item
-            self.scatter.addPoints([x], [y])
+            if x > 0 and y > 0:
+                brush = pg.mkBrush(
+                    0, 255, 0, 120
+                )  # Green color for points in the positive quadrant
+            else:
+                brush = pg.mkBrush(
+                    (255, 0, 0, 120)
+                )  # Red color for points in the other quadrants
+
+            self.scatter.addPoints([x], [y], brush=brush)
             self.added_points.add((x, y))
 
             # Update the plot range to fit all points
