@@ -39,7 +39,7 @@ def send_points(port):
             # create random points and write them to the socket
             points = createRandomPoints()
             client_socket.sendall(pickle.dumps(points))
-            time.sleep(1)
+            time.sleep(0.01)
         # close the socket
         client_socket.close()
 

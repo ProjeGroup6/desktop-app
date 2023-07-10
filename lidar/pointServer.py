@@ -1,5 +1,3 @@
-# lidar icerisinde calistirdigimiz kod. buna simdilik karismayin
-
 import os
 import ydlidar
 import time
@@ -8,9 +6,8 @@ import pickle
 
 # Create a socket object
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 # # Bind the socket to a specific address and port
-server_address = ("0.0.0.0", 8082)
+server_address = ("0.0.0.0", 8888)
 server_socket.bind(server_address)
 
 # Listen for incoming connections

@@ -10,13 +10,14 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from pyqtgraph import ScatterPlotItem
 
 
-port = 8080
-point_num = 360
-socket_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-
 class MainWindow(QMainWindow):
+    point_num = 360
+    socket_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    port = 8080
+
     def __init__(self):
+        self.socket_conn.connect(("192.168.43.68", self.port))
+
         super(MainWindow, self).__init__()
 
         # Create scatter plot item
@@ -45,18 +46,25 @@ class MainWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.generate_point)
         self.timer.start(1)  # Add a new point every second
+        # self.generate_point()
 
     def generate_point(self):
-        # Generate a 360 sized data array and fill this array between 0 and 100
-        global socket_conn
-        data = socket_conn.recv(point_num * struct.calcsize("i"))
-        data = pickle.loads(data)
+        data = self.socket_conn.recv(4096)
+        if not data:
+            return
+
+        try:
+            data = pickle.loads(data)
+        except pickle.UnpicklingError as e:
+            return  # or any other appropriate error handling
 
         # traverse data in for loop
         for i in range(len(data)):
+            if data[i] == None:
+                continue
             # get x and y with angle and distance
-            x = round(data[i] * np.cos(np.deg2rad(i)))
-            y = round(data[i] * np.sin(np.deg2rad(i)))
+            x = data[i] * np.cos(np.deg2rad(i))
+            y = data[i] * np.sin(np.deg2rad(i))
             # Check if the point already exists
             if (x, y) not in self.added_points:
                 # Add the point to the scatter plot item
@@ -83,8 +91,6 @@ class MainWindow(QMainWindow):
 
 
 def startProcess():
-    global socket_conn
-    socket_conn.connect(("0.0.0.0", port))
     app = QApplication(sys.argv)
     mainWindow = MainWindow()
     mainWindow.show()

@@ -8,8 +8,12 @@ import numpy as np
 from Control import *
 from Buzzer import *
 
+is_send_lidar = False
+
 
 def start_message(port):
+    global is_send_lidar
+
     def receive_message(sock):
         buffer_size = 4096
         data = sock.recv(buffer_size)
@@ -79,7 +83,7 @@ def start_message(port):
                 time.sleep(0.5)
                 buzzer.run("0")
             elif message == "8":
-                print("relax")
+                is_send_lidar = not is_send_lidar
             elif message == "9":
                 print("balance")
 
@@ -134,9 +138,65 @@ def send_camera(port):
         client_socket.close()
 
 
+def send_lidar(port):
+    # Create a TCP socket
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Bind the socket to a specific address and port
+    server_socket.bind(("0.0.0.0", port))
+
+    # Listen for incoming connections
+    server_socket.listen(1)
+    print(f"Server listening on port {port}")
+
+    while True:
+        client_socket, client_address = server_socket.accept()
+        print(f"Accepted connection from: {client_address}")
+        while True:
+            if is_send_lidar:
+                ydlidar.os_init()
+                ports = ydlidar.lidarPortList()
+                port = "/dev/ydlidar"
+                for key, value in ports.items():
+                    port = value
+                laser = ydlidar.CYdLidar()
+                laser.setlidaropt(ydlidar.LidarPropSerialPort, port)
+                laser.setlidaropt(ydlidar.LidarPropSerialBaudrate, 115200)
+                laser.setlidaropt(ydlidar.LidarPropLidarType, ydlidar.TYPE_TRIANGLE)
+                laser.setlidaropt(
+                    ydlidar.LidarPropDeviceType, ydlidar.YDLIDAR_TYPE_SERIAL
+                )
+                laser.setlidaropt(ydlidar.LidarPropScanFrequency, 4.0)
+                laser.setlidaropt(ydlidar.LidarPropSampleRate, 3)
+                laser.setlidaropt(ydlidar.LidarPropSingleChannel, True)
+                points = [None] * 360
+                ret = laser.initialize()
+                if ret:
+                    ret = laser.turnOn()
+                    scan = ydlidar.LaserScan()
+                    while ret and ydlidar.os_isOk():
+                        r = laser.doProcessSimple(scan)
+                        if r:
+                            for point in scan.points:
+                                angle = int((point.angle * 180 / 3.14 + 360) % 360)
+                                distance = point.range
+                                print("angle:", angle, " range: ", point.range)
+                                points[angle] = distance
+                            print(points)
+                            client_socket.sendall(pickle.dumps(points))
+                        else:
+                            print("Failed to get Lidar Data")
+                        time.sleep(0.05)
+                    laser.turnOff()
+                laser.disconnecting()
+            else:
+                time.sleep(1)
+
+
 # Start servers on two different ports
 server_port = 8000
 camera_port = 9000
+lidar_port = 8080
 
 print(f"Address: {socket.gethostbyname(socket.gethostname())}")
 
@@ -145,3 +205,10 @@ start_message.start()
 
 send_camera = threading.Thread(target=send_camera, args=(camera_port,))
 send_camera.start()
+
+send_lidar = threading.Thread(target=send_lidar, args=(lidar_port,))
+send_lidar.start()
+
+start_message.join()
+send_camera.join()
+send_lidar.join()
