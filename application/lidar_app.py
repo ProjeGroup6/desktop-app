@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
     port = 8080
 
     def __init__(self):
-        self.socket_conn.connect(("192.168.43.68", self.port))
+        self.socket_conn.connect(("192.168.43.254", self.port))
 
         super(MainWindow, self).__init__()
 
@@ -46,7 +46,6 @@ class MainWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.generate_point)
         self.timer.start(1)  # Add a new point every second
-        # self.generate_point()
 
     def generate_point(self):
         data = self.socket_conn.recv(4096)
@@ -63,8 +62,8 @@ class MainWindow(QMainWindow):
             if data[i] == None:
                 continue
             # get x and y with angle and distance
-            x = data[i] * np.cos(np.deg2rad(i))
-            y = data[i] * np.sin(np.deg2rad(i))
+            x = int(data[i] * np.cos(np.deg2rad(i)) * 10) / 10
+            y = int(data[i] * np.sin(np.deg2rad(i)) * 10) / 10
             # Check if the point already exists
             if (x, y) not in self.added_points:
                 # Add the point to the scatter plot item

@@ -1,10 +1,10 @@
-# The code of the messaging and video sending servers to be run by robot.
-
 import socket
 import threading
 import time
 import cv2
 import numpy as np
+import ydlidar
+import pickle
 from Control import *
 from Buzzer import *
 
@@ -187,6 +187,8 @@ def send_lidar(port):
                         else:
                             print("Failed to get Lidar Data")
                         time.sleep(0.05)
+                        if not is_send_lidar:
+                            break
                     laser.turnOff()
                 laser.disconnecting()
             else:
