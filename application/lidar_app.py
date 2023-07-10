@@ -2,9 +2,9 @@ import pickle
 import sys
 import socket
 import struct
+import threading
 import numpy as np
 import pyqtgraph as pg
-from multiprocessing import Process
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from pyqtgraph import ScatterPlotItem
@@ -97,6 +97,10 @@ def startProcess():
 
 
 if __name__ == "__main__":
-    process = Process(target=startProcess)
-    process.start()
-    process.join()
+    # process = Process(target=startProcess)
+    # process.start()
+    # process.join()
+    # create a thread
+    thread = threading.Thread(target=startProcess)
+    thread.start()
+    thread.join()
