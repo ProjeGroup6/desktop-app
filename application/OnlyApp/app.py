@@ -29,8 +29,8 @@ globalVar = 0
 globalFlag = False
 delay = 200  # delay for sending messages serial
 
-CAMERAPORT = 9000
 SERVERPORT = 8000
+CAMERAPORT = 9000
 MAPPINGPORT = 9595  # for mapping
 POINTNUM = 360
 
@@ -302,21 +302,21 @@ class Ui_MainWindow(object):
         # Initialize video stream thread
         # print("cameraSock: "self.cameraSock)
 
-        self.scatter = ScatterPlotItem(
-            size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 0, 0, 120)
-        )
+        # self.scatter = ScatterPlotItem(
+        #     size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 0, 0, 120)
+        # )
 
-        self.plot_widget = pg.PlotWidget()
-        self.plot_widget.addItem(self.scatter)
+        # self.plot_widget = pg.PlotWidget()
+        # self.plot_widget.addItem(self.scatter)
 
-        # Add a layout for the mapframe
-        self.mapLayout = QVBoxLayout(self.mapframe)
-        self.mapWidget = QtWidgets.QWidget(self.mapframe)
-        self.mapLayout.addWidget(self.mapWidget)
-        self.mapWidgetLayout = QVBoxLayout(self.mapWidget)
-        self.mapWidgetLayout.addWidget(self.plot_widget)
+        # # Add a layout for the mapframe
+        # self.mapLayout = QVBoxLayout(self.mapframe)
+        # self.mapWidget = QtWidgets.QWidget(self.mapframe)
+        # self.mapLayout.addWidget(self.mapWidget)
+        # self.mapWidgetLayout = QVBoxLayout(self.mapWidget)
+        # self.mapWidgetLayout.addWidget(self.plot_widget)
 
-        self.plot_widget.scene().sigMouseClicked.connect(self.plot_clicked)
+        # self.plot_widget.scene().sigMouseClicked.connect(self.plot_clicked)
 
         # Set up the main window
         # self.centralwidget.setLayout(self.layout)
@@ -552,11 +552,11 @@ class Ui_MainWindow(object):
         print("cameraSock: ")
         print(self.cameraSock)
 
-        self.mapSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_ip = self.connectAddresInput.toPlainText()
-        map_port = MAPPINGPORT  # Change this to your server's port
-        self.mapSock.connect((server_ip, map_port))
-        print(f"Connected to server at {server_ip}:{map_port}")
+        # self.mapSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # server_ip = self.connectAddresInput.toPlainText()
+        # map_port = MAPPINGPORT  # Change this to your server's port
+        # self.mapSock.connect((server_ip, map_port))
+        # print(f"Connected to server at {server_ip}:{map_port}")
 
         # Start the server thread after connecting
         self.start_server_thread()
