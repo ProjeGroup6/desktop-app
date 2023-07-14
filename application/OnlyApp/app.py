@@ -1,38 +1,68 @@
-# Desktop application
-# To test on your own computer:
-#   1 - run app.py
-#   2 - Run server.py
-#   3- Enter the IP that server.py prints on the screen.
-
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import QThread, QTimer
-from PyQt5.QtGui import QImage, QPixmap
-import socket, time, _camera  # call camera class in _camera.py
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import QThread, QTimer
-from PyQt5.QtGui import QImage, QPixmap
-import socket
-import threading
-import time
+from PyQt5.QtCore import QThread, QTimer, pyqtSignal
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QVBoxLayout
+import socket, time
 import _camera  # call camera class in _camera.py
-import pyqtgraph as pg
-from pyqtgraph import ScatterPlotItem
-import pyqtgraph as pg
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
-from pyqtgraph import ScatterPlotItem
-
-import cv2  # Import the cv2 module here
-import numpy as np  # Import numpy module here
 import pickle
+import pyqtgraph as pg
+import numpy as np  # Import numpy module here
 
 globalVar = 0
 globalFlag = False
 delay = 200  # delay for sending messages serial
 
-SERVERPORT = 8000
 CAMERAPORT = 9000
+SERVERPORT = 8000
 MAPPINGPORT = 9595  # for mapping
-POINTNUM = 360
+
+
+# Main map operations are done in this class.
+# This class works with start_map_thread in line 524
+class mapThread(QtCore.QThread):
+    added_points = set()
+
+    def __init__(self, sock, mapPlotWidget, parent=None):
+        super(mapThread, self).__init__(parent)
+        self.sock = sock
+        self.mapPlotWidget=mapPlotWidget
+    def run(self):
+        while True:
+            data = self.sock.recv(4096)
+            if not data:
+                break
+
+            # give  _pickle.UnpicklingError: could not find MARK error
+            newdata = pickle.loads(data)
+
+            #try:
+                #newdata = pickle.loads(data)
+            #except pickle.UnpicklingError as e:
+                #print("error verdi")
+                #return
+
+            for i in range(len(newdata)):
+                if newdata[i] is None:
+                    continue
+                # Get x and y with angle and distance
+                x = int(newdata[i] * np.cos(np.deg2rad(i)) * 10) / 10
+                y = int(newdata[i] * np.sin(np.deg2rad(i)) * 10) / 10
+
+                # Check if the point already exists
+                if (x, y) not in self.added_points:
+                    # Add the point to the scatter plot item
+                    if x > 0 and y > 0:
+                        brush = pg.mkBrush(
+                            0, 255, 0, 120
+                        )  # Green color for points in the positive quadrant
+                    else:
+                        brush = pg.mkBrush(
+                            255, 0, 0, 120
+                        )  # Red color for points in the other quadrants
+                    self.mapPlotWidget.plot([x], [y], symbolBrush=brush, symbolSize=10)
+                self.added_points.add((x, y))
+        #time.sleep(1000)
+
 
 
 class ServerThread(QtCore.QThread):
@@ -51,89 +81,16 @@ class ServerThread(QtCore.QThread):
 
 
 class Ui_MainWindow(object):
-    def __init__(self):
-        self.sock = None
-        self.cameraSock = None
-        self.mapSock = None
-        self.server_thread = None
-        self.isConnected = False
-        self.added_points = set()
-        self.scatter = None
-        self.plot_widget = None
 
-        # Create a thread that will listen for incoming messages
-        self.listen_thread = QThread()
-        self.listen_thread.run = (
-            self.listen_to_server
-        )  # The run method is the entry point into the thread
-        self.listen_thread.start()
-
-        # Connect the signal to the slot for receiving new points
-
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.update_progress)
-        self.timer.start(1000)  # update every second
-
-        # Create a timer for each button
-        self.forwardButtonTimer = QTimer()
-        self.backwardButtonTimer = QTimer()
-        self.stepleftButtonTimer = QTimer()
-        self.turnleftButtonTimer = QTimer()
-        self.steprightButtonTimer = QTimer()
-        self.turnrightButtonTimer = QTimer()
-
-        # Add a flag for each action
-        self.is_forwardButton_pressed = False
-        self.is_backwardButton_pressed = False
-        self.is_stepleftButton_pressed = False
-        self.is_turnleftButton_pressed = False
-        self.is_steprightButton_pressed = False
-        self.is_turnrightButton_pressed = False
-
-        # Connect the timer timeout signal to the send method
-        self.forwardButtonTimer.timeout.connect(
-            lambda: self.send_message_to_server("1")
-            if self.is_forwardButton_pressed
-            else None
-        )
-        self.backwardButtonTimer.timeout.connect(
-            lambda: self.send_message_to_server("3")
-            if self.is_backwardButton_pressed
-            else None
-        )
-        self.stepleftButtonTimer.timeout.connect(
-            lambda: self.send_message_to_server("4")
-            if self.is_stepleftButton_pressed
-            else None
-        )
-        self.turnleftButtonTimer.timeout.connect(
-            lambda: self.send_message_to_server("5")
-            if self.is_turnleftButton_pressed
-            else None
-        )
-        self.steprightButtonTimer.timeout.connect(
-            lambda: self.send_message_to_server("6")
-            if self.is_steprightButton_pressed
-            else None
-        )
-        self.turnrightButtonTimer.timeout.connect(
-            lambda: self.send_message_to_server("7")
-            if self.is_turnrightButton_pressed
-            else None
-        )
-
-        # Set the timer interval (in milliseconds)
-        self.forwardButtonTimer.setInterval(delay)  # Modify this as needed
-        self.backwardButtonTimer.setInterval(delay)  # Modify this as needed
-        self.stepleftButtonTimer.setInterval(delay)  # Modify this as needed
-        self.turnleftButtonTimer.setInterval(delay)  # Modify this as needed
-        self.steprightButtonTimer.setInterval(delay)  # Modify this as needed
-        self.turnrightButtonTimer.setInterval(delay)  # Modify this as needed
+    point_num = 360
+    port = 9595
+    added_points = set()
 
     def setupUi(self, MainWindow):
+
         # Design Codes
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1180, 840)
+        MainWindow.setObjectName("The Jokers Robot Control App")
+        MainWindow.resize(900, 850)
         MainWindow.setStyleSheet("background: #1E2128;")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -146,15 +103,15 @@ class Ui_MainWindow(object):
         self.progressBar.setObjectName("progressBar")
 
         self.connectAddresInput = QtWidgets.QTextEdit(self.centralwidget)
-        self.connectAddresInput.setGeometry(QtCore.QRect(280, 70, 191, 31))
+        self.connectAddresInput.setGeometry(QtCore.QRect(20, 19, 191, 31))
         self.connectAddresInput.setStyleSheet("background: white;")
         self.connectAddresInput.setObjectName("connectAddresInput")
         self.connectButton = QtWidgets.QPushButton(self.centralwidget)
-        self.connectButton.setGeometry(QtCore.QRect(480, 70, 81, 31))
+        self.connectButton.setGeometry(QtCore.QRect(220, 19, 81, 31))
         self.connectButton.setStyleSheet("color:white;background: #59737A;")
         self.connectButton.setObjectName("connectButton")
         self.verticalSlider = QtWidgets.QSlider(self.centralwidget)
-        self.verticalSlider.setGeometry(QtCore.QRect(649, 70, 22, 251))
+        self.verticalSlider.setGeometry(QtCore.QRect(350, 70, 22, 251))
         self.verticalSlider.setOrientation(QtCore.Qt.Vertical)
         self.verticalSlider.setObjectName("verticalSlider")
 
@@ -164,13 +121,13 @@ class Ui_MainWindow(object):
         self.verticalSlider.valueChanged.connect(self.updateSpeedValue)
 
         self.speedlabel = QtWidgets.QLabel(self.centralwidget)
-        self.speedlabel.setGeometry(QtCore.QRect(642, 40, 47, 13))
+        self.speedlabel.setGeometry(QtCore.QRect(345, 45, 30, 13))
         self.speedlabel.setStyleSheet(
             "color:white;background: #1E2128;\n" "border: none;"
         )
         self.speedlabel.setObjectName("speedlabel")
         self.speedValuelabel = QtWidgets.QLabel(self.centralwidget)
-        self.speedValuelabel.setGeometry(QtCore.QRect(654, 330, 47, 13))
+        self.speedValuelabel.setGeometry(QtCore.QRect(355, 330, 47, 13))
         self.speedValuelabel.setStyleSheet(
             "color:white;background: #1E2128;\n" "border: none;"
         )
@@ -178,31 +135,33 @@ class Ui_MainWindow(object):
         self.speedValuelabel.setObjectName("speedValuelabel")
 
         self.cameraframe = QtWidgets.QFrame(self.centralwidget)
-        self.cameraframe.setGeometry(QtCore.QRect(719, 20, 451, 391))
+        self.cameraframe.setGeometry(QtCore.QRect(420, 10, 451, 391))
         self.cameraframe.setStyleSheet("border:3px solid #262932;")
         self.cameraframe.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.cameraframe.setFrameShadow(QtWidgets.QFrame.Raised)
         self.cameraframe.setObjectName("cameraframe")
 
         self.openCameraButton = QtWidgets.QPushButton(self.centralwidget)
-        self.openCameraButton.setGeometry(QtCore.QRect(620, 389, 81, 31))
+        self.openCameraButton.setGeometry(QtCore.QRect(330, 365, 81, 31))
         self.openCameraButton.setStyleSheet("color:white;background: #59737A;")
         self.openCameraButton.setObjectName("openCameraButton")
 
         self.openMapButton = QtWidgets.QPushButton(self.centralwidget)
-        self.openMapButton.setGeometry(QtCore.QRect(620, 429, 81, 31))
+        self.openMapButton.setGeometry(QtCore.QRect(330, 420, 81, 31))
         self.openMapButton.setStyleSheet("color:white;background: #59737A;")
         self.openMapButton.setObjectName("openMapButton")
 
         self.mapframe = QtWidgets.QFrame(self.centralwidget)
-        self.mapframe.setGeometry(QtCore.QRect(719, 430, 451, 391))
+        self.mapframe.setGeometry(QtCore.QRect(420, 410, 451, 391))
         self.mapframe.setStyleSheet("border:3px solid #262932;")
         self.mapframe.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.mapframe.setFrameShadow(QtWidgets.QFrame.Raised)
         self.mapframe.setObjectName("mapframe")
 
+
+
         self.remoteControlBackgroundlabel = QtWidgets.QLabel(self.centralwidget)
-        self.remoteControlBackgroundlabel.setGeometry(QtCore.QRect(10, 140, 311, 241))
+        self.remoteControlBackgroundlabel.setGeometry(QtCore.QRect(10, 140, 310, 241))
         self.remoteControlBackgroundlabel.setStyleSheet(
             "background: #262932;\n" "border: none;"
         )
@@ -217,7 +176,7 @@ class Ui_MainWindow(object):
         self.steprightButton.setStyleSheet("color:white;background: #59737A;")
         self.steprightButton.setObjectName("steprightButton")
         self.remoterControllabel = QtWidgets.QLabel(self.centralwidget)
-        self.remoterControllabel.setGeometry(QtCore.QRect(120, 150, 111, 31))
+        self.remoterControllabel.setGeometry(QtCore.QRect(120, 150, 110, 31))
         self.remoterControllabel.setStyleSheet(
             "color:white;background: #262932;\n" "border: none;"
         )
@@ -249,9 +208,10 @@ class Ui_MainWindow(object):
         self.turnleftButton = QtWidgets.QPushButton(self.centralwidget)
         self.turnleftButton.setGeometry(QtCore.QRect(30, 250, 81, 31))
         self.turnleftButton.setStyleSheet("background: #59737A;color:white;")
+
         self.turnleftButton.setObjectName("turnleftButton")
         self.autonomousbackgroundlabel = QtWidgets.QLabel(self.centralwidget)
-        self.autonomousbackgroundlabel.setGeometry(QtCore.QRect(340, 140, 121, 241))
+        self.autonomousbackgroundlabel.setGeometry(QtCore.QRect(10, 400, 150, 241))
         self.autonomousbackgroundlabel.setStyleSheet(
             "background: #262932;\n" "border: none;"
         )
@@ -259,25 +219,45 @@ class Ui_MainWindow(object):
         self.autonomousbackgroundlabel.setObjectName("autonomousbackgroundlabel")
 
         self.mappinggroundlabel = QtWidgets.QLabel(self.centralwidget)
-        self.mappinggroundlabel.setGeometry(QtCore.QRect(480, 140, 121, 241))
-        self.mappinggroundlabel.setStyleSheet("background: #262932;\n" "border: none;")
+        self.mappinggroundlabel.setGeometry(QtCore.QRect(170, 400, 150, 241))
+        self.mappinggroundlabel.setStyleSheet(
+            "background: #262932;\n" "border: none;"
+        )
         self.mappinggroundlabel.setText("")
         self.mappinggroundlabel.setObjectName("mappinggroundlabel")
+        self.mappinglabel = QtWidgets.QLabel(self.centralwidget)
+        self.mappinglabel.setGeometry(QtCore.QRect(240, 410, 40, 31))
+        self.mappinglabel.setStyleSheet(
+            "color:white;background: #262932;\n" "border: none;"
+        )
+        self.mappinglabel.setObjectName("mappinglabel")
+
+        self.mapstopButton = QtWidgets.QPushButton(self.centralwidget)
+        self.mapstopButton.setGeometry(QtCore.QRect(200, 530, 81, 31))
+        self.mapstopButton.setStyleSheet("color:white;background: #59737A;")
+        self.mapstopButton.setObjectName("mapstopButton")
+
+        self.mapstartButton = QtWidgets.QPushButton(self.centralwidget)
+        self.mapstartButton.setGeometry(QtCore.QRect(200, 490, 81, 31))
+        self.mapstartButton.setStyleSheet("color:white;background: #59737A;")
+        self.mapstartButton.setObjectName("mapstartButton")
 
         self.stopButton = QtWidgets.QPushButton(self.centralwidget)
-        self.stopButton.setGeometry(QtCore.QRect(360, 250, 81, 31))
+        self.stopButton.setGeometry(QtCore.QRect(50, 530, 81, 31))
         self.stopButton.setStyleSheet("color:white;background: #59737A;")
         self.stopButton.setObjectName("stopButton")
         self.startButton = QtWidgets.QPushButton(self.centralwidget)
-        self.startButton.setGeometry(QtCore.QRect(360, 210, 81, 31))
+        self.startButton.setGeometry(QtCore.QRect(50, 490, 81, 31))
         self.startButton.setStyleSheet("color:white;background: #59737A;")
         self.startButton.setObjectName("startButton")
+
         self.autonomouslabel = QtWidgets.QLabel(self.centralwidget)
-        self.autonomouslabel.setGeometry(QtCore.QRect(370, 150, 91, 31))
+        self.autonomouslabel.setGeometry(QtCore.QRect(55, 410, 91, 31))
         self.autonomouslabel.setStyleSheet(
             "color:white;background: #262932;\n" "border: none;"
         )
         self.autonomouslabel.setObjectName("autonomouslabel")
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1060, 21))
@@ -302,25 +282,22 @@ class Ui_MainWindow(object):
         # Initialize video stream thread
         # print("cameraSock: "self.cameraSock)
 
-        # self.scatter = ScatterPlotItem(
-        #     size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 0, 0, 120)
-        # )
+        # Add a layout for the mapframe
+        self.mapLayout = QVBoxLayout(self.mapframe)
+        # Create a widget for the separate window content
+        self.mapWidget = QtWidgets.QWidget(self.mapframe)
+        self.mapLayout.addWidget(self.mapWidget)
+        # Create a layout for the separate window content
+        self.mapWidgetLayout = QVBoxLayout(self.mapWidget)
 
-        # self.plot_widget = pg.PlotWidget()
-        # self.plot_widget.addItem(self.scatter)
-
-        # # Add a layout for the mapframe
-        # self.mapLayout = QVBoxLayout(self.mapframe)
-        # self.mapWidget = QtWidgets.QWidget(self.mapframe)
-        # self.mapLayout.addWidget(self.mapWidget)
-        # self.mapWidgetLayout = QVBoxLayout(self.mapWidget)
-        # self.mapWidgetLayout.addWidget(self.plot_widget)
-
-        # self.plot_widget.scene().sigMouseClicked.connect(self.plot_clicked)
-
+        # Create a plot widget for the map
+        self.mapPlotWidget = pg.PlotWidget()
+        self.mapWidgetLayout.addWidget(self.mapPlotWidget)
+        self.mapPlotWidget.scene().sigMouseClicked.connect(self.plot_clicked)
         # Set up the main window
-        # self.centralwidget.setLayout(self.layout)
-        # MainWindow.setCentralWidget(self.centralwidget)
+       # self.centralwidget.setLayout(self.layout)
+        #MainWindow.setCentralWidget(self.centralwidget)
+
 
         # Functions of the buttons
         self.connectButton.clicked.connect(self.connect_to_server)
@@ -337,6 +314,7 @@ class Ui_MainWindow(object):
         self.stopButton.clicked.connect(lambda: self.send_message_to_server("11"))
         self.openCameraButton.clicked.connect(lambda: self.send_message_to_server("12"))
         self.openMapButton.clicked.connect(lambda: self.send_message_to_server("13"))
+
 
         # When the button is pressed, start the timer and set the flag
         self.forwardButton.pressed.connect(self.forwardButton_pressed)
@@ -356,44 +334,9 @@ class Ui_MainWindow(object):
 
     def plot_clicked(self, event):
         # Get the coordinates of the clicked point
-        point = self.plot_widget.plotItem.vb.mapSceneToView(event.scenePos())
+        point = self.mapPlotWidget.plotItem.vb.mapSceneToView(event.scenePos())
         x, y = point.x(), point.y()
         print("Clicked at coordinates:", x, y)
-
-    def receive_points(self):
-        data = self.mapSock.recv(4096)
-        if not data:
-            return
-
-        try:
-            data = pickle.loads(data)
-        except pickle.UnpicklingError as e:
-            return  # or any other appropriate error handling
-
-        # traverse data in for loop
-        for i in range(len(data)):
-            if data[i] == None:
-                continue
-            # get x and y with angle and distance
-            x = int(data[i] * np.cos(np.deg2rad(i)) * 10) / 10
-            y = int(data[i] * np.sin(np.deg2rad(i)) * 10) / 10
-            # Check if the point already exists
-            if (x, y) not in self.added_points:
-                # Add the point to the scatter plot item
-                if x > 0 and y > 0:
-                    brush = pg.mkBrush(
-                        0, 255, 0, 120
-                    )  # Green color for points in the positive quadrant
-                else:
-                    brush = pg.mkBrush(
-                        (255, 0, 0, 120)
-                    )  # Red color for points in the other quadrants
-
-                self.scatter.addPoints([x], [y], brush=brush)
-                self.added_points.add((x, y))
-
-                # Update the plot range to fit all points
-                self.plot_widget.autoRange()
 
     def update_progress(self):
         global globalVar
@@ -468,6 +411,83 @@ class Ui_MainWindow(object):
         pixmap = QPixmap.fromImage(image)
         self.image_label.setPixmap(pixmap)
 
+    def __init__(self):
+        self.sock = None
+        self.cameraSock = None
+        self.mapSock = None
+        self.server_thread = None
+        self.isConnected = False
+
+
+        # Create a thread that will listen for incoming messages
+        self.listen_thread = QThread()
+        self.listen_thread.run = (
+            self.listen_to_server
+        )  # The run method is the entry point into the thread
+        self.listen_thread.start()
+
+        # Connect the signal to the slot for receiving new points
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update_progress)
+        self.timer.start(1000)  # update every second
+
+        # Create a timer for each button
+        self.forwardButtonTimer = QTimer()
+        self.backwardButtonTimer = QTimer()
+        self.stepleftButtonTimer = QTimer()
+        self.turnleftButtonTimer = QTimer()
+        self.steprightButtonTimer = QTimer()
+        self.turnrightButtonTimer = QTimer()
+
+        # Add a flag for each action
+        self.is_forwardButton_pressed = False
+        self.is_backwardButton_pressed = False
+        self.is_stepleftButton_pressed = False
+        self.is_turnleftButton_pressed = False
+        self.is_steprightButton_pressed = False
+        self.is_turnrightButton_pressed = False
+
+        # Connect the timer timeout signal to the send method
+        self.forwardButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("1")
+            if self.is_forwardButton_pressed
+            else None
+        )
+        self.backwardButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("3")
+            if self.is_backwardButton_pressed
+            else None
+        )
+        self.stepleftButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("4")
+            if self.is_stepleftButton_pressed
+            else None
+        )
+        self.turnleftButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("5")
+            if self.is_turnleftButton_pressed
+            else None
+        )
+        self.steprightButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("6")
+            if self.is_steprightButton_pressed
+            else None
+        )
+        self.turnrightButtonTimer.timeout.connect(
+            lambda: self.send_message_to_server("7")
+            if self.is_turnrightButton_pressed
+            else None
+        )
+
+        # Set the timer interval (in milliseconds)
+        self.forwardButtonTimer.setInterval(delay)  # Modify this as needed
+        self.backwardButtonTimer.setInterval(delay)  # Modify this as needed
+        self.stepleftButtonTimer.setInterval(delay)  # Modify this as needed
+        self.turnleftButtonTimer.setInterval(delay)  # Modify this as needed
+        self.steprightButtonTimer.setInterval(delay)  # Modify this as needed
+        self.turnrightButtonTimer.setInterval(delay)  # Modify this as needed
+
     def listen_to_server(self):
         while self.isConnected:
             while True:  # Keep running indefinitely
@@ -509,6 +529,13 @@ class Ui_MainWindow(object):
             self.server_thread.messageReceived.connect(self.handle_server_message)
             self.server_thread.start()
 
+    #this function is started when connect on line 578
+    def start_map_thread(self):
+        if self.mapSock is not None:
+            self.map_thread = mapThread(self.mapSock,self.mapPlotWidget)
+            self.map_thread.start()
+
+
     def start_camera_thread(self):
         if self.cameraSock is not None:
             self.video_stream_thread = _camera.RunThread(self.cameraSock)
@@ -540,6 +567,9 @@ class Ui_MainWindow(object):
         self.sock.connect((server_ip, server_port))
         print(f"Connected to server at {server_ip}:{server_port}")
 
+        self.mapSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.mapSock.connect(("172.25.208.1", 9595))
+
         self.cameraSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_ip = self.connectAddresInput.toPlainText()
         camera_port = CAMERAPORT  # Change this to your server's port
@@ -551,16 +581,11 @@ class Ui_MainWindow(object):
         print(self.sock)
         print("cameraSock: ")
         print(self.cameraSock)
-
-        # self.mapSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # server_ip = self.connectAddresInput.toPlainText()
-        # map_port = MAPPINGPORT  # Change this to your server's port
-        # self.mapSock.connect((server_ip, map_port))
-        # print(f"Connected to server at {server_ip}:{map_port}")
-
         # Start the server thread after connecting
         self.start_server_thread()
         self.start_camera_thread()
+        self.start_map_thread()
+
 
         # Start listening to server after connecting
         self.listen_thread.start()
@@ -573,7 +598,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "The Jokers Robot Control App"))
         self.connectButton.setText(_translate("MainWindow", "Connect"))
         self.speedlabel.setText(_translate("MainWindow", "Speed"))
         self.openCameraButton.setText(_translate("MainWindow", "Open Camera"))
@@ -591,11 +616,14 @@ class Ui_MainWindow(object):
         self.startButton.setText(_translate("MainWindow", "Start"))
         self.autonomouslabel.setText(_translate("MainWindow", "AUTONOMOUS"))
         self.openMapButton.setText(_translate("MainWindow", "Open Map"))
+        self.mappinglabel.setText(_translate("MainWindow", "MAP"))
+        self.mapstartButton.setText(_translate("MainWindow", "Start"))
+        self.mapstopButton.setText(_translate("MainWindow", "Stop"))
+
 
 
 if __name__ == "__main__":
     import sys
-
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
