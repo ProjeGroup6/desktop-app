@@ -3,6 +3,7 @@ import sys
 import socket
 import struct
 import threading
+import json
 import numpy as np
 import pyqtgraph as pg
 from PyQt5.QtCore import QTimer
@@ -10,46 +11,49 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from pyqtgraph import ScatterPlotItem
 
 point_num = 360
-port = 8080
+port = 8082
 added_points = set()
 scatter = None
 plot_widget = None
 
 
 def receive_points(socket_conn):
-    data = socket_conn.recv(4096)
+    data = socket_conn.recv(4096).decode()
     if not data:
+        print("not")
         return
 
     try:
-        data = pickle.loads(data)
+        data = json.loads(data)
+        print(data)
     except pickle.UnpicklingError as e:
+        print("error")
         return  # or any other appropriate error handling
 
-    # traverse data in for loop
-    for i in range(len(data)):
-        if data[i] == None:
-            continue
-        # get x and y with angle and distance
-        x = int(data[i] * np.cos(np.deg2rad(i)) * 10) / 10
-        y = int(data[i] * np.sin(np.deg2rad(i)) * 10) / 10
-        # Check if the point already exists
-        if (x, y) not in added_points:
-            # Add the point to the scatter plot item
-            if x > 0 and y > 0:
-                brush = pg.mkBrush(
-                    0, 255, 0, 120
-                )  # Green color for points in the positive quadrant
-            else:
-                brush = pg.mkBrush(
-                    (255, 0, 0, 120)
-                )  # Red color for points in the other quadrants
+    # # traverse data in for loop
+    # for i in range(len(data)):
+    #     if data[i] == None:
+    #         continue
+    #     # get x and y with angle and distance
+    #     x = int(data[i] * np.cos(np.deg2rad(i)) * 10) / 10
+    #     y = int(data[i] * np.sin(np.deg2rad(i)) * 10) / 10
+    #     # Check if the point already exists
+    #     if (x, y) not in added_points:
+    #         # Add the point to the scatter plot item
+    #         if x > 0 and y > 0:
+    #             brush = pg.mkBrush(
+    #                 0, 255, 0, 120
+    #             )  # Green color for points in the positive quadrant
+    #         else:
+    #             brush = pg.mkBrush(
+    #                 (255, 0, 0, 120)
+    #             )  # Red color for points in the other quadrants
 
-            scatter.addPoints([x], [y], brush=brush)
-            added_points.add((x, y))
+    #         scatter.addPoints([x], [y], brush=brush)
+    #         added_points.add((x, y))
 
-            # Update the plot range to fit all points
-            plot_widget.autoRange()
+    #         # Update the plot range to fit all points
+    #         plot_widget.autoRange()
 
 
 def plot_clicked(event):
@@ -62,7 +66,7 @@ def plot_clicked(event):
 def start_process():
     global scatter, plot_widget
     socket_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    socket_conn.connect(("172.17.0.1", port))
+    socket_conn.connect(("192.168.43.165", port))
 
     app = QApplication(sys.argv)
     main_window = QMainWindow()
