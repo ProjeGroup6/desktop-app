@@ -10,59 +10,59 @@ import numpy as np  # Import numpy module here
 
 globalVar = 0
 globalFlag = False
-delay = 200  # delay for sending messages serial
+delay = 10  # delay for sending messages serial
 
-CAMERAPORT = 9000
 SERVERPORT = 8000
-MAPPINGPORT = 9595  # for mapping
+CAMERAPORT = 9000
+# MAPPINGPORT = 9595  # for mapping
 
 
 # Main map operations are done in this class.
 # This class works with start_map_thread in line 524
-class mapThread(QtCore.QThread):
-    added_points = set()
+# class mapThread(QtCore.QThread):
+#     added_points = set()
 
-    def __init__(self, sock, mapPlotWidget, parent=None):
-        super(mapThread, self).__init__(parent)
-        self.sock = sock
-        self.mapPlotWidget=mapPlotWidget
-    def run(self):
-        while True:
-            data = self.sock.recv(4096)
-            if not data:
-                break
+#     def __init__(self, sock, mapPlotWidget, parent=None):
+#         super(mapThread, self).__init__(parent)
+#         self.sock = sock
+#         self.mapPlotWidget = mapPlotWidget
 
-            # give  _pickle.UnpicklingError: could not find MARK error
-            newdata = pickle.loads(data)
+#     def run(self):
+#         while True:
+#             data = self.sock.recv(4096)
+#             if not data:
+#                 break
 
-            #try:
-                #newdata = pickle.loads(data)
-            #except pickle.UnpicklingError as e:
-                #print("error verdi")
-                #return
+#             # give  _pickle.UnpicklingError: could not find MARK error
+#             newdata = pickle.loads(data)
 
-            for i in range(len(newdata)):
-                if newdata[i] is None:
-                    continue
-                # Get x and y with angle and distance
-                x = int(newdata[i] * np.cos(np.deg2rad(i)) * 10) / 10
-                y = int(newdata[i] * np.sin(np.deg2rad(i)) * 10) / 10
+#             # try:
+#             # newdata = pickle.loads(data)
+#             # except pickle.UnpicklingError as e:
+#             # print("error verdi")
+#             # return
 
-                # Check if the point already exists
-                if (x, y) not in self.added_points:
-                    # Add the point to the scatter plot item
-                    if x > 0 and y > 0:
-                        brush = pg.mkBrush(
-                            0, 255, 0, 120
-                        )  # Green color for points in the positive quadrant
-                    else:
-                        brush = pg.mkBrush(
-                            255, 0, 0, 120
-                        )  # Red color for points in the other quadrants
-                    self.mapPlotWidget.plot([x], [y], symbolBrush=brush, symbolSize=10)
-                self.added_points.add((x, y))
-        #time.sleep(1000)
+#             for i in range(len(newdata)):
+#                 if newdata[i] is None:
+#                     continue
+#                 # Get x and y with angle and distance
+#                 x = int(newdata[i] * np.cos(np.deg2rad(i)) * 10) / 10
+#                 y = int(newdata[i] * np.sin(np.deg2rad(i)) * 10) / 10
 
+#                 # Check if the point already exists
+#                 if (x, y) not in self.added_points:
+#                     # Add the point to the scatter plot item
+#                     if x > 0 and y > 0:
+#                         brush = pg.mkBrush(
+#                             0, 255, 0, 120
+#                         )  # Green color for points in the positive quadrant
+#                     else:
+#                         brush = pg.mkBrush(
+#                             255, 0, 0, 120
+#                         )  # Red color for points in the other quadrants
+#                     self.mapPlotWidget.plot([x], [y], symbolBrush=brush, symbolSize=10)
+#                 self.added_points.add((x, y))
+#         # time.sleep(1000)
 
 
 class ServerThread(QtCore.QThread):
@@ -81,13 +81,11 @@ class ServerThread(QtCore.QThread):
 
 
 class Ui_MainWindow(object):
-
     point_num = 360
     port = 9595
     added_points = set()
 
     def setupUi(self, MainWindow):
-
         # Design Codes
         MainWindow.setObjectName("The Jokers Robot Control App")
         MainWindow.resize(900, 850)
@@ -158,8 +156,6 @@ class Ui_MainWindow(object):
         self.mapframe.setFrameShadow(QtWidgets.QFrame.Raised)
         self.mapframe.setObjectName("mapframe")
 
-
-
         self.remoteControlBackgroundlabel = QtWidgets.QLabel(self.centralwidget)
         self.remoteControlBackgroundlabel.setGeometry(QtCore.QRect(10, 140, 310, 241))
         self.remoteControlBackgroundlabel.setStyleSheet(
@@ -220,9 +216,7 @@ class Ui_MainWindow(object):
 
         self.mappinggroundlabel = QtWidgets.QLabel(self.centralwidget)
         self.mappinggroundlabel.setGeometry(QtCore.QRect(170, 400, 150, 241))
-        self.mappinggroundlabel.setStyleSheet(
-            "background: #262932;\n" "border: none;"
-        )
+        self.mappinggroundlabel.setStyleSheet("background: #262932;\n" "border: none;")
         self.mappinggroundlabel.setText("")
         self.mappinggroundlabel.setObjectName("mappinggroundlabel")
         self.mappinglabel = QtWidgets.QLabel(self.centralwidget)
@@ -283,21 +277,20 @@ class Ui_MainWindow(object):
         # print("cameraSock: "self.cameraSock)
 
         # Add a layout for the mapframe
-        self.mapLayout = QVBoxLayout(self.mapframe)
-        # Create a widget for the separate window content
-        self.mapWidget = QtWidgets.QWidget(self.mapframe)
-        self.mapLayout.addWidget(self.mapWidget)
-        # Create a layout for the separate window content
-        self.mapWidgetLayout = QVBoxLayout(self.mapWidget)
+        # self.mapLayout = QVBoxLayout(self.mapframe)
+        # # Create a widget for the separate window content
+        # self.mapWidget = QtWidgets.QWidget(self.mapframe)
+        # self.mapLayout.addWidget(self.mapWidget)
+        # # Create a layout for the separate window content
+        # self.mapWidgetLayout = QVBoxLayout(self.mapWidget)
 
-        # Create a plot widget for the map
-        self.mapPlotWidget = pg.PlotWidget()
-        self.mapWidgetLayout.addWidget(self.mapPlotWidget)
-        self.mapPlotWidget.scene().sigMouseClicked.connect(self.plot_clicked)
+        # # Create a plot widget for the map
+        # self.mapPlotWidget = pg.PlotWidget()
+        # self.mapWidgetLayout.addWidget(self.mapPlotWidget)
+        # self.mapPlotWidget.scene().sigMouseClicked.connect(self.plot_clicked)
         # Set up the main window
-       # self.centralwidget.setLayout(self.layout)
-        #MainWindow.setCentralWidget(self.centralwidget)
-
+        # self.centralwidget.setLayout(self.layout)
+        # MainWindow.setCentralWidget(self.centralwidget)
 
         # Functions of the buttons
         self.connectButton.clicked.connect(self.connect_to_server)
@@ -315,7 +308,6 @@ class Ui_MainWindow(object):
         self.openCameraButton.clicked.connect(lambda: self.send_message_to_server("12"))
         self.openMapButton.clicked.connect(lambda: self.send_message_to_server("13"))
 
-
         # When the button is pressed, start the timer and set the flag
         self.forwardButton.pressed.connect(self.forwardButton_pressed)
         self.backwardButton.pressed.connect(self.backwardButton_pressed)
@@ -332,11 +324,11 @@ class Ui_MainWindow(object):
         self.steprightButton.released.connect(self.steprightButton_released)
         self.turnrightButton.released.connect(self.turnrightButton_released)
 
-    def plot_clicked(self, event):
-        # Get the coordinates of the clicked point
-        point = self.mapPlotWidget.plotItem.vb.mapSceneToView(event.scenePos())
-        x, y = point.x(), point.y()
-        print("Clicked at coordinates:", x, y)
+    # def plot_clicked(self, event):
+    #     # Get the coordinates of the clicked point
+    #     point = self.mapPlotWidget.plotItem.vb.mapSceneToView(event.scenePos())
+    #     x, y = point.x(), point.y()
+    #     print("Clicked at coordinates:", x, y)
 
     def update_progress(self):
         global globalVar
@@ -417,7 +409,6 @@ class Ui_MainWindow(object):
         self.mapSock = None
         self.server_thread = None
         self.isConnected = False
-
 
         # Create a thread that will listen for incoming messages
         self.listen_thread = QThread()
@@ -529,12 +520,11 @@ class Ui_MainWindow(object):
             self.server_thread.messageReceived.connect(self.handle_server_message)
             self.server_thread.start()
 
-    #this function is started when connect on line 578
-    def start_map_thread(self):
-        if self.mapSock is not None:
-            self.map_thread = mapThread(self.mapSock,self.mapPlotWidget)
-            self.map_thread.start()
-
+    # this function is started when connect on line 578
+    # def start_map_thread(self):
+    #     if self.mapSock is not None:
+    #         self.map_thread = mapThread(self.mapSock, self.mapPlotWidget)
+    #         self.map_thread.start()
 
     def start_camera_thread(self):
         if self.cameraSock is not None:
@@ -567,8 +557,8 @@ class Ui_MainWindow(object):
         self.sock.connect((server_ip, server_port))
         print(f"Connected to server at {server_ip}:{server_port}")
 
-        self.mapSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.mapSock.connect(("172.25.208.1", 9595))
+        # self.mapSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # self.mapSock.connect(("172.25.208.1", 9595))
 
         self.cameraSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_ip = self.connectAddresInput.toPlainText()
@@ -586,7 +576,6 @@ class Ui_MainWindow(object):
         self.start_camera_thread()
         self.start_map_thread()
 
-
         # Start listening to server after connecting
         self.listen_thread.start()
 
@@ -598,7 +587,9 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "The Jokers Robot Control App"))
+        MainWindow.setWindowTitle(
+            _translate("MainWindow", "The Jokers Robot Control App")
+        )
         self.connectButton.setText(_translate("MainWindow", "Connect"))
         self.speedlabel.setText(_translate("MainWindow", "Speed"))
         self.openCameraButton.setText(_translate("MainWindow", "Open Camera"))
@@ -621,9 +612,9 @@ class Ui_MainWindow(object):
         self.mapstopButton.setText(_translate("MainWindow", "Stop"))
 
 
-
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
