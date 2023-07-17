@@ -2,6 +2,7 @@ from PyQt5.QtGui import QImage
 from PyQt5.QtCore import QThread
 from PyQt5 import QtCore, QtWidgets
 
+
 class RunThread(QtCore.QThread):
     changePixmap = QtCore.pyqtSignal(QImage)
 
