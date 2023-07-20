@@ -1,0 +1,12 @@
+item { 
+	name:'prism'
+	id:1
+}
+item { 
+	name:'cylinder'
+	id:2
+}
+item { 
+	name:'sphere'
+	id:3
+}
