@@ -15,7 +15,6 @@ delay = 10  # delay for sending messages serial
 SERVERPORT = 8000
 CAMERAPORT = 8004
 # MAPPINGPORT = 9595  # for mapping
-CAMERAIP = "192.168.43.177"
 
 
 
@@ -565,7 +564,7 @@ class Ui_MainWindow(object):
         self.cameraSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_ip = self.connectAddresInput.toPlainText()
         camera_port = CAMERAPORT  # Change this to your server's port
-        self.cameraSock.connect((CAMERAIP, camera_port))
+        self.cameraSock.connect((server_ip, camera_port))
         print(f"Connected to server at {server_ip}:{camera_port}")
         self.isConnected = True  # Set connected to true
         globalFlag = True
@@ -576,7 +575,7 @@ class Ui_MainWindow(object):
         # Start the server thread after connecting
         self.start_server_thread()
         self.start_camera_thread()
-        self.start_map_thread()
+        #self.start_map_thread()
 
         # Start listening to server after connecting
         self.listen_thread.start()
